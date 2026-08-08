@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Garuda">
+  <defs>
+    <radialGradient id="g" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#ffb703"/>
+      <stop offset="55%" stop-color="#e85d04"/>
+      <stop offset="100%" stop-color="#9a3412"/>
+    </radialGradient>
+  </defs>
+  <circle cx="100" cy="100" r="96" fill="url(#g)"/>
+  <circle cx="100" cy="100" r="82" fill="none" stroke="#fff7ee" stroke-width="4" opacity="0.85"/>
+  <!-- wings -->
+  <path d="M42 108c22-28 42-40 58-44 16 4 36 16 58 44-18-8-36-12-58-12s-40 4-58 12z" fill="#fff7ee" opacity="0.95"/>
+  <path d="M52 118c18-18 34-26 48-28 14 2 30 10 48 28-16-6-30-9-48-9s-32 3-48 9z" fill="#9a3412" opacity="0.35"/>
+  <!-- head -->
+  <circle cx="100" cy="78" r="22" fill="#fff7ee"/>
+  <circle cx="108" cy="74" r="4" fill="#1a2332"/>
+  <path d="M118 80c10 2 16 8 18 14-8-2-14-2-20-4l2-10z" fill="#ffb703"/>
+  <!-- body -->
+  <ellipse cx="100" cy="122" rx="18" ry="26" fill="#fff7ee"/>
+  <path d="M100 142l-10 28h20l-10-28z" fill="#ffb703"/>
+  <text x="100" y="188" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="16" fill="#fff7ee" letter-spacing="2">GARUDA</text>
+</svg>
