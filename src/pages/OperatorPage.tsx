@@ -647,7 +647,90 @@ export function OperatorPage() {
               </div>
             )}
 
-            <div className="console-group">
+            <div className="op-action-dock">
+              <div className="dock-player">
+                {hasPlayer && selectedPlayer ? (
+                  <>
+                    <strong>#{selectedPlayer.number}</strong>
+                    <span>{selectedPlayer.name}</span>
+                  </>
+                ) : (
+                  <span className="muted">Pilih pemain dulu</span>
+                )}
+              </div>
+              <div className="score-btns">
+                <button
+                  className="btn btn-success"
+                  type="button"
+                  disabled={!hasPlayer}
+                  onClick={() =>
+                    withPlayer(
+                      (sel) => state.recordScore(sel.teamId, 1, sel.playerId),
+                      '+1 FT',
+                    )
+                  }
+                >
+                  +1
+                  <small>FT</small>
+                </button>
+                <button
+                  className="btn btn-primary"
+                  type="button"
+                  disabled={!hasPlayer}
+                  onClick={() =>
+                    withPlayer(
+                      (sel) => state.recordScore(sel.teamId, 2, sel.playerId),
+                      '+2',
+                    )
+                  }
+                >
+                  +2
+                  <small>FG</small>
+                </button>
+                <button
+                  className="btn btn-navy"
+                  type="button"
+                  disabled={!hasPlayer}
+                  onClick={() =>
+                    withPlayer(
+                      (sel) => state.recordScore(sel.teamId, 3, sel.playerId),
+                      '+3',
+                    )
+                  }
+                >
+                  +3
+                  <small>3PT</small>
+                </button>
+              </div>
+              <div className="dock-controls">
+                <button
+                  className="btn btn-danger"
+                  type="button"
+                  disabled={!hasPlayer}
+                  onClick={() =>
+                    withPlayer(
+                      (sel) => state.recordFoul(sel.teamId, sel.playerId),
+                      'Foul',
+                      'err',
+                    )
+                  }
+                >
+                  FOUL
+                </button>
+                <button
+                  className="btn btn-ghost"
+                  type="button"
+                  onClick={() => {
+                    state.undoLastScore()
+                    showToast('Undo skor', 'warn')
+                  }}
+                >
+                  Undo
+                </button>
+              </div>
+            </div>
+
+            <div className="console-group console-score-desktop">
               <div className="group-label">Skor</div>
               <div className="score-btns">
                 <button
@@ -695,83 +778,84 @@ export function OperatorPage() {
               </div>
             </div>
 
-            <div className="console-group">
-              <div className="group-label">Miss</div>
-              <div className="stat-btns three">
-                <button
-                  className="btn btn-ghost"
-                  type="button"
-                  disabled={!hasPlayer}
-                  onClick={() =>
-                    withPlayer(
-                      (sel) => state.recordMiss(sel.teamId, '1', sel.playerId),
-                      'Miss FT',
-                    )
-                  }
-                >
-                  Miss FT
-                </button>
-                <button
-                  className="btn btn-ghost"
-                  type="button"
-                  disabled={!hasPlayer}
-                  onClick={() =>
-                    withPlayer(
-                      (sel) => state.recordMiss(sel.teamId, '2', sel.playerId),
-                      'Miss 2',
-                    )
-                  }
-                >
-                  Miss 2
-                </button>
-                <button
-                  className="btn btn-ghost"
-                  type="button"
-                  disabled={!hasPlayer}
-                  onClick={() =>
-                    withPlayer(
-                      (sel) => state.recordMiss(sel.teamId, '3', sel.playerId),
-                      'Miss 3',
-                    )
-                  }
-                >
-                  Miss 3
-                </button>
-              </div>
-            </div>
-
-            <div className="console-group">
-              <div className="group-label">Statistik</div>
-              <div className="stat-btns">
-                {(
-                  [
-                    ['reb_off', 'OREB'],
-                    ['reb_def', 'DREB'],
-                    ['ast', 'AST'],
-                    ['stl', 'STL'],
-                    ['blk', 'BLK'],
-                    ['tov', 'TOV'],
-                  ] as const
-                ).map(([type, label]) => (
+            <details className="console-more" open>
+              <summary className="group-label">Miss &amp; Statistik</summary>
+              <div className="console-group">
+                <div className="stat-btns three">
                   <button
-                    key={type}
                     className="btn btn-ghost"
                     type="button"
                     disabled={!hasPlayer}
                     onClick={() =>
                       withPlayer(
-                        (sel) => state.recordStat(type, sel.teamId, sel.playerId),
-                        label,
+                        (sel) => state.recordMiss(sel.teamId, '1', sel.playerId),
+                        'Miss FT',
                       )
                     }
                   >
-                    {label}
+                    Miss FT
                   </button>
-                ))}
+                  <button
+                    className="btn btn-ghost"
+                    type="button"
+                    disabled={!hasPlayer}
+                    onClick={() =>
+                      withPlayer(
+                        (sel) => state.recordMiss(sel.teamId, '2', sel.playerId),
+                        'Miss 2',
+                      )
+                    }
+                  >
+                    Miss 2
+                  </button>
+                  <button
+                    className="btn btn-ghost"
+                    type="button"
+                    disabled={!hasPlayer}
+                    onClick={() =>
+                      withPlayer(
+                        (sel) => state.recordMiss(sel.teamId, '3', sel.playerId),
+                        'Miss 3',
+                      )
+                    }
+                  >
+                    Miss 3
+                  </button>
+                </div>
               </div>
-            </div>
+              <div className="console-group">
+                <div className="stat-btns">
+                  {(
+                    [
+                      ['reb_off', 'OREB'],
+                      ['reb_def', 'DREB'],
+                      ['ast', 'AST'],
+                      ['stl', 'STL'],
+                      ['blk', 'BLK'],
+                      ['tov', 'TOV'],
+                    ] as const
+                  ).map(([type, label]) => (
+                    <button
+                      key={type}
+                      className="btn btn-ghost"
+                      type="button"
+                      disabled={!hasPlayer}
+                      onClick={() =>
+                        withPlayer(
+                          (sel) =>
+                            state.recordStat(type, sel.teamId, sel.playerId),
+                          label,
+                        )
+                      }
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </details>
 
-            <div className="console-group">
+            <div className="console-group console-control-desktop">
               <div className="group-label">Kontrol</div>
               <div className="stat-btns three">
                 <button

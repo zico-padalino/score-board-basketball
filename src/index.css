@@ -33,6 +33,13 @@ html,
 body,
 #root {
   min-height: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -44,6 +51,12 @@ body {
     radial-gradient(ellipse 60% 40% at 90% 0%, rgba(29, 53, 87, 0.14), transparent 50%),
     linear-gradient(180deg, var(--bg-0), var(--bg-1) 60%, #ddd2c2);
   background-attachment: fixed;
+}
+
+@media (max-width: 768px) {
+  body {
+    background-attachment: scroll;
+  }
 }
 
 body::before {
@@ -1086,6 +1099,29 @@ button {
   gap: 0.35rem;
 }
 
+.op-action-dock {
+  display: none;
+}
+
+.console-more {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.console-more > summary {
+  list-style: none;
+  cursor: default;
+  pointer-events: none;
+}
+
+.console-more > summary::-webkit-details-marker {
+  display: none;
+}
+
+.console-more .console-group {
+  margin: 0;
+}
+
 .group-label {
   font-size: 0.68rem;
   font-weight: 800;
@@ -1274,6 +1310,44 @@ button {
   }
 
   .op-mobile-tabs {
+    display: none;
+  }
+}
+
+/* Tablet & large phones — tab tim + layout lebih longgar */
+@media (max-width: 900px) {
+  .op-mobile-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem;
+  }
+
+  .op-mobile-tabs button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    min-height: 48px;
+    padding: 0.45rem 0.6rem;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    background: rgba(20, 32, 51, 0.05);
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: var(--ink);
+  }
+
+  .op-mobile-tabs button.active {
+    border-color: var(--team-color, var(--orange));
+    background: color-mix(in srgb, var(--team-color, var(--orange)) 14%, white);
+  }
+
+  .op-main.showing-home .op-team-away,
+  .op-main.showing-away .op-team-home {
+    display: none;
+  }
+
+  .op-scorestrip {
     display: none;
   }
 }
@@ -1592,11 +1666,30 @@ button {
   }
 
   .box-score {
-    margin: 0 -0.25rem;
+    margin: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
   }
 
   .box-score table {
     font-size: 0.72rem;
+    min-width: 720px;
+  }
+
+  .scoresheet {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .scoresheet table {
+    min-width: 520px;
+  }
+
+  .field input,
+  .field select,
+  .roster-row input {
+    font-size: 16px; /* cegah zoom iOS */
   }
 
   .op-toast {
@@ -1606,8 +1699,12 @@ button {
   }
 }
 
-/* Portrait phone — fokus satu kolom, aksi di atas */
+/* Portrait phone — roster dulu, dock aksi sticky di bawah */
 @media (max-width: 768px) and (orientation: portrait) {
+  .op-page {
+    padding-bottom: calc(7.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
   .op-main {
     display: flex;
     flex-direction: column;
@@ -1615,16 +1712,154 @@ button {
   }
 
   .op-console {
-    order: -1;
+    order: 1;
   }
 
   .op-team {
-    order: 1;
+    order: 0;
+  }
+
+  .op-action-dock {
+    display: grid;
+    gap: 0.4rem;
+    position: fixed;
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: calc(3.4rem + env(safe-area-inset-bottom, 0px));
+    z-index: 25;
+    padding: 0.55rem;
+    border-radius: 16px;
+    background: rgba(15, 28, 46, 0.96);
+    color: #fff7ee;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.28);
+  }
+
+  .dock-player {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    min-height: 1.2rem;
+  }
+
+  .dock-player strong {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    letter-spacing: 0.04em;
+    color: var(--orange);
+  }
+
+  .dock-player .muted {
+    color: rgba(255, 247, 238, 0.55);
+  }
+
+  .op-action-dock .score-btns .btn {
+    min-height: 54px;
+    font-size: 1.55rem;
+  }
+
+  .dock-controls {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 0.35rem;
+  }
+
+  .dock-controls .btn {
+    min-height: 44px;
+    font-weight: 800;
+  }
+
+  .dock-controls .btn-ghost {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff7ee;
+  }
+
+  .console-score-desktop,
+  .console-control-desktop {
+    display: none;
+  }
+
+  .console-more > summary {
+    pointer-events: auto;
+    cursor: pointer;
+    padding: 0.45rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .console-more > summary::after {
+    content: '▾';
+    font-size: 0.85rem;
+    opacity: 0.6;
+  }
+
+  .console-more[open] > summary::after {
+    content: '▴';
+  }
+
+  .console-player {
+    display: none;
+  }
+}
+
+/* Very small phones */
+@media (max-width: 390px) {
+  .page,
+  .page.wide,
+  .op-page {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .op-mobile-tabs button {
+    font-size: 0.78rem;
+    min-height: 44px;
+    gap: 0.3rem;
+  }
+
+  .op-team-quick {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .jersey-name {
+    font-size: 0.82rem;
+  }
+
+  .op-action-dock {
+    left: 0.35rem;
+    right: 0.35rem;
+    padding: 0.45rem;
+  }
+
+  .op-action-dock .score-btns .btn {
+    min-height: 50px;
+    font-size: 1.35rem;
+  }
+
+  .bottom-nav a {
+    font-size: 0.6rem;
+    min-height: 46px;
   }
 }
 
 /* Landscape phone — hemat tinggi, 2 kolom */
 @media (max-width: 960px) and (orientation: landscape) {
+  .op-action-dock {
+    display: none !important;
+  }
+
+  .console-score-desktop,
+  .console-control-desktop {
+    display: grid;
+  }
+
+  .console-player {
+    display: flex;
+  }
+
   .app-shell {
     height: 100dvh;
     max-height: 100dvh;
