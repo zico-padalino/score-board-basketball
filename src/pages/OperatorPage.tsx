@@ -18,6 +18,7 @@ export function OperatorPage() {
     home: false,
     away: false,
   })
+  const [mobileTeam, setMobileTeam] = useState<TeamId>('home')
   const [toast, setToast] = useState<Toast | null>(null)
   const [flash, setFlash] = useState(0)
   /** Bench player waiting to replace someone on court */
@@ -235,6 +236,7 @@ export function OperatorPage() {
     }
 
     setSelected({ teamId, playerId: p.id })
+    setMobileTeam(teamId)
     if (pendingSubIn && pendingSubIn.playerId !== p.id) {
       setPendingSubIn(null)
     }
@@ -511,20 +513,53 @@ export function OperatorPage() {
         </header>
 
         <div className="op-scorestrip">
-          <div className="strip-team home">
+          <button
+            type="button"
+            className={`strip-team home ${mobileTeam === 'home' ? 'active' : ''}`}
+            onClick={() => setMobileTeam('home')}
+          >
             <TeamLogo team={state.home} size="sm" />
             <span>{state.home.name}</span>
             <strong>{homeScore}</strong>
-          </div>
+          </button>
           <div className="strip-vs">vs</div>
-          <div className="strip-team away">
+          <button
+            type="button"
+            className={`strip-team away ${mobileTeam === 'away' ? 'active' : ''}`}
+            onClick={() => setMobileTeam('away')}
+          >
             <strong>{awayScore}</strong>
             <span>{state.away.name}</span>
             <TeamLogo team={state.away} size="sm" />
-          </div>
+          </button>
         </div>
 
-        <div className="op-main">
+        <div className={`op-mobile-tabs`} role="tablist" aria-label="Pilih tim">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mobileTeam === 'home'}
+            className={mobileTeam === 'home' ? 'active' : ''}
+            onClick={() => setMobileTeam('home')}
+            style={{ ['--team-color' as string]: state.home.color }}
+          >
+            <TeamLogo team={state.home} size="sm" />
+            Home · {homeScore}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mobileTeam === 'away'}
+            className={mobileTeam === 'away' ? 'active' : ''}
+            onClick={() => setMobileTeam('away')}
+            style={{ ['--team-color' as string]: state.away.color }}
+          >
+            Away · {awayScore}
+            <TeamLogo team={state.away} size="sm" />
+          </button>
+        </div>
+
+        <div className={`op-main showing-${mobileTeam}`}>
           {renderTeamCol('home')}
 
           <section className={`op-console ${hasPlayer ? 'ready' : ''} flash-${flash % 2}`}>

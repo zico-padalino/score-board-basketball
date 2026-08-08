@@ -22,7 +22,7 @@ export function Layout() {
   }
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell route-${location.pathname.replace('/', '') || 'setup'}`}>
       <header className="topnav">
         <div className="brand">
           <div className="brand-mark" aria-hidden />

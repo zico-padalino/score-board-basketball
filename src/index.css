@@ -1253,6 +1253,14 @@ button {
     gap: 0.4rem;
   }
 
+  .strip-team {
+    border: none;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+  }
+
   .strip-team strong {
     font-size: 2rem;
   }
@@ -1264,22 +1272,45 @@ button {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+
+  .op-mobile-tabs {
+    display: none;
+  }
 }
 
 /* Mobile shell + bottom nav */
 @media (max-width: 768px) {
   .app-shell {
-    grid-template-rows: auto 1fr auto;
-    padding-bottom: env(safe-area-inset-bottom, 0);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    height: 100dvh;
+    min-height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+
+  .app-content {
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 
   .topnav {
-    padding: 0.65rem 0.85rem;
-    padding-top: max(0.65rem, env(safe-area-inset-top));
+    padding: 0.45rem 0.75rem;
+    padding-top: max(0.45rem, env(safe-area-inset-top));
+    gap: 0.5rem;
+  }
+
+  .brand {
+    gap: 0.5rem;
+  }
+
+  .brand-mark {
+    width: 30px;
+    height: 30px;
   }
 
   .brand h1 {
-    font-size: 1.35rem;
+    font-size: 1.2rem;
   }
 
   .brand span {
@@ -1293,12 +1324,12 @@ button {
   .bottom-nav {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 0.15rem;
-    position: sticky;
-    bottom: 0;
+    gap: 0.1rem;
+    position: relative;
     z-index: 30;
-    padding: 0.35rem 0.35rem calc(0.35rem + env(safe-area-inset-bottom, 0));
-    background: rgba(255, 252, 247, 0.94);
+    flex-shrink: 0;
+    padding: 0.25rem 0.3rem calc(0.25rem + env(safe-area-inset-bottom, 0));
+    background: rgba(255, 252, 247, 0.96);
     backdrop-filter: blur(14px);
     border-top: 1px solid var(--line);
     box-shadow: 0 -8px 24px rgba(20, 32, 51, 0.08);
@@ -1309,11 +1340,11 @@ button {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.15rem;
-    min-height: 52px;
+    gap: 0.12rem;
+    min-height: 48px;
     border-radius: 12px;
     font-weight: 800;
-    font-size: 0.68rem;
+    font-size: 0.65rem;
     letter-spacing: 0.02em;
     color: var(--ink-soft);
     text-decoration: none;
@@ -1321,8 +1352,8 @@ button {
   }
 
   .bottom-nav a .bn-icon {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     display: block;
     border: 2px solid currentColor;
     border-radius: 4px;
@@ -1376,15 +1407,19 @@ button {
   .page,
   .page.wide {
     width: 100%;
-    padding: 0.85rem 0.75rem 1.25rem;
+    padding: 0.7rem 0.7rem 1rem;
+  }
+
+  .setup-hero {
+    margin-bottom: 0.85rem;
   }
 
   .setup-hero h2 {
-    font-size: clamp(2rem, 9vw, 2.8rem);
+    font-size: clamp(1.85rem, 8vw, 2.5rem);
   }
 
   .setup-hero p {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
   }
 
   .logo-picker {
@@ -1406,6 +1441,10 @@ button {
     min-height: 44px;
   }
 
+  .roster-list {
+    max-height: 240px;
+  }
+
   .roster-row {
     grid-template-columns: 52px 1fr;
     gap: 0.4rem;
@@ -1416,7 +1455,7 @@ button {
   }
 
   .panel {
-    padding: 1rem;
+    padding: 0.9rem;
   }
 
   .btn,
@@ -1424,26 +1463,118 @@ button {
     min-height: 44px;
   }
 
+  /* Operator mobile */
   .op-page {
-    padding-left: 0.65rem;
-    padding-right: 0.65rem;
+    padding: 0.5rem 0.55rem 0.75rem;
   }
 
-  .op-team-quick {
-    grid-template-columns: repeat(2, 1fr);
+  .operator {
+    gap: 0.55rem;
   }
 
-  .op-team-quick .btn {
-    min-height: 44px;
+  .op-toolbar {
+    top: 0;
+    border-radius: 14px;
+    padding: 0.45rem 0.5rem;
+    gap: 0.4rem;
   }
 
-  .jersey {
-    min-height: 56px;
-    padding: 0.6rem 0.65rem;
+  .op-toolbar-left {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .op-clock-block {
+    width: 100%;
+    justify-content: space-between;
+    padding: 0 0.15rem;
+  }
+
+  .op-main-clock {
+    font-size: clamp(2rem, 11vw, 2.6rem);
+  }
+
+  .op-shot {
+    min-width: 56px;
+  }
+
+  .op-shot strong {
+    font-size: 1.5rem;
   }
 
   .op-toolbar-actions {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .op-toolbar-links {
+    display: none;
+  }
+
+  .op-scorestrip {
+    display: none;
+  }
+
+  .op-mobile-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem;
+  }
+
+  .op-mobile-tabs button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-height: 48px;
+    padding: 0.4rem 0.55rem;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    background: rgba(20, 32, 51, 0.05);
+    font-weight: 800;
+    font-size: 0.88rem;
+    color: var(--ink);
+  }
+
+  .op-mobile-tabs button.active {
+    border-color: var(--team-color, var(--orange));
+    background: color-mix(in srgb, var(--team-color, var(--orange)) 14%, white);
+  }
+
+  .op-main.showing-home .op-team-away,
+  .op-main.showing-away .op-team-home {
+    display: none;
+  }
+
+  .op-team-quick {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .op-team-quick .btn {
+    min-height: 42px;
+    padding: 0.35rem 0.25rem;
+    font-size: 0.78rem;
+  }
+
+  .op-team-score {
+    font-size: 2.6rem;
+  }
+
+  .op-team-head h2 {
+    font-size: 1.35rem;
+  }
+
+  .jersey {
+    min-height: 54px;
+    padding: 0.55rem 0.55rem;
+  }
+
+  .console-group.recent-group {
+    display: none;
+  }
+
+  .score-btns .btn {
+    min-height: 64px;
+    font-size: 1.7rem;
   }
 
   .scoresheet-header {
@@ -1466,6 +1597,218 @@ button {
 
   .box-score table {
     font-size: 0.72rem;
+  }
+
+  .op-toast {
+    top: 3.5rem;
+    max-width: calc(100vw - 1.5rem);
+    text-align: center;
+  }
+}
+
+/* Portrait phone — fokus satu kolom, aksi di atas */
+@media (max-width: 768px) and (orientation: portrait) {
+  .op-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .op-console {
+    order: -1;
+  }
+
+  .op-team {
+    order: 1;
+  }
+}
+
+/* Landscape phone — hemat tinggi, 2 kolom */
+@media (max-width: 960px) and (orientation: landscape) {
+  .app-shell {
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+
+  .topnav {
+    padding: 0.25rem 0.65rem;
+    padding-left: max(0.65rem, env(safe-area-inset-left));
+    padding-right: max(0.65rem, env(safe-area-inset-right));
+  }
+
+  .brand-mark {
+    width: 24px;
+    height: 24px;
+  }
+
+  .brand h1 {
+    font-size: 1rem;
+  }
+
+  .bottom-nav {
+    padding: 0.15rem 0.25rem;
+    padding-bottom: max(0.15rem, env(safe-area-inset-bottom));
+    padding-left: max(0.25rem, env(safe-area-inset-left));
+    padding-right: max(0.25rem, env(safe-area-inset-right));
+  }
+
+  .bottom-nav a {
+    min-height: 40px;
+    flex-direction: row;
+    gap: 0.3rem;
+    font-size: 0.62rem;
+  }
+
+  .bottom-nav a .bn-label {
+    display: none;
+  }
+
+  .page,
+  .page.wide,
+  .op-page {
+    padding: 0.4rem 0.55rem;
+    padding-left: max(0.55rem, env(safe-area-inset-left));
+    padding-right: max(0.55rem, env(safe-area-inset-right));
+  }
+
+  .setup-hero {
+    margin-bottom: 0.5rem;
+  }
+
+  .setup-hero h2 {
+    font-size: 1.6rem;
+  }
+
+  .setup-hero p {
+    display: none;
+  }
+
+  .grid-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .roster-list {
+    max-height: 140px;
+  }
+
+  .op-toolbar {
+    position: sticky;
+    top: 0;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    padding: 0.3rem 0.45rem;
+    gap: 0.35rem;
+  }
+
+  .op-toolbar-left {
+    width: auto;
+  }
+
+  .op-clock-block {
+    width: auto;
+    gap: 0.55rem;
+  }
+
+  .op-main-clock {
+    font-size: 1.8rem;
+  }
+
+  .op-shot {
+    min-width: 48px;
+    padding: 0.2rem 0.4rem;
+  }
+
+  .op-shot strong {
+    font-size: 1.2rem;
+  }
+
+  .op-toolbar-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    width: auto;
+    gap: 0.25rem;
+  }
+
+  .op-toolbar-actions .btn {
+    min-height: 36px;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .op-toolbar-actions .btn:nth-child(n + 5) {
+    display: none;
+  }
+
+  .op-mobile-tabs {
+    display: grid;
+  }
+
+  .op-mobile-tabs button {
+    min-height: 40px;
+    font-size: 0.8rem;
+  }
+
+  .op-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 0.95fr);
+    gap: 0.45rem;
+    align-items: start;
+  }
+
+  .op-console {
+    order: 0;
+    position: sticky;
+    top: 3.2rem;
+    max-height: calc(100dvh - 7.5rem);
+    overflow: auto;
+  }
+
+  .op-team {
+    max-height: calc(100dvh - 7.5rem);
+    overflow: auto;
+  }
+
+  .op-main.showing-home .op-team-away,
+  .op-main.showing-away .op-team-home {
+    display: none;
+  }
+
+  .score-btns .btn {
+    min-height: 52px;
+    font-size: 1.45rem;
+    padding: 0.45rem 0.25rem;
+  }
+
+  .stat-btns .btn {
+    min-height: 38px;
+    font-size: 0.78rem;
+  }
+
+  .console-player {
+    min-height: 52px;
+    padding: 0.4rem;
+  }
+
+  .console-jersey {
+    width: 44px;
+    height: 44px;
+    font-size: 1.15rem;
+  }
+
+  .op-team-quick {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .jersey {
+    min-height: 46px;
+    padding: 0.4rem 0.45rem;
+  }
+
+  .jersey-num {
+    width: 40px;
+    height: 40px;
+    font-size: 1.35rem;
   }
 }
 
@@ -2129,25 +2472,51 @@ button {
     min-height: 100dvh;
     overflow: auto;
     grid-template-rows: auto auto auto;
+    padding: 0.65rem;
+    padding-top: max(0.65rem, env(safe-area-inset-top));
+    padding-bottom: max(0.65rem, env(safe-area-inset-bottom));
   }
 
   .display-stage {
     grid-template-columns: 1fr;
     height: auto;
+    gap: 0.55rem;
   }
 
   .display-mid {
     order: -1;
+    padding: 0.35rem 0.25rem;
+    gap: 0.35rem;
   }
 
   .side-score {
-    font-size: clamp(5rem, 26vw, 7.5rem);
+    font-size: clamp(4.5rem, 22vw, 7rem);
+    margin: 0.1rem 0 0.4rem;
+  }
+
+  .side-name {
+    font-size: clamp(1.6rem, 7vw, 2.4rem);
+  }
+
+  .team-logo.xl {
+    width: 64px;
+    height: 64px;
+  }
+
+  .display-side {
+    padding: 0.85rem 0.75rem;
+    border-radius: 18px;
   }
 
   .display-side .side-accent {
     inset: 0 0 auto 0;
     width: auto;
-    height: 6px;
+    height: 5px;
+  }
+
+  .side-stats {
+    width: 100%;
+    gap: 0.45rem;
   }
 
   .ticker-track {
@@ -2155,6 +2524,164 @@ button {
     white-space: normal;
     justify-content: center;
     row-gap: 0.35rem;
+    padding: 0.55rem 0.7rem;
+  }
+
+  .display-top {
+    padding-right: 7rem;
+  }
+
+  .display-brand strong {
+    font-size: 1.25rem;
+  }
+
+  .display-brand em {
+    font-size: 0.58rem;
+  }
+}
+
+/* Display landscape — skor kiri-kanan tetap, hemat tinggi */
+@media (max-width: 960px) and (orientation: landscape) {
+  .display {
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 0.35rem;
+    padding: 0.4rem 0.55rem;
+    padding-left: max(0.55rem, env(safe-area-inset-left));
+    padding-right: max(0.55rem, env(safe-area-inset-right));
+  }
+
+  .display-top {
+    padding-right: 7.5rem;
+  }
+
+  .display-brand .brand-orb {
+    width: 24px;
+    height: 24px;
+  }
+
+  .display-brand strong {
+    font-size: 1.05rem;
+  }
+
+  .display-brand em {
+    display: none;
+  }
+
+  .display-live-pill {
+    padding: 0.25rem 0.55rem;
+    font-size: 0.65rem;
+  }
+
+  .display-stage {
+    grid-template-columns: 1fr minmax(140px, 220px) 1fr;
+    height: 100%;
+    min-height: 0;
+    gap: 0.45rem;
+    align-items: stretch;
+  }
+
+  .display-mid {
+    order: 0;
+    gap: 0.2rem;
+    padding: 0.2rem;
+  }
+
+  .display-side {
+    padding: 0.45rem 0.5rem;
+    min-height: 0;
+    justify-content: center;
+  }
+
+  .team-logo.xl {
+    width: 42px;
+    height: 42px;
+    margin-bottom: 0.1rem;
+  }
+
+  .side-label {
+    font-size: 0.58rem;
+    margin-bottom: 0.1rem;
+  }
+
+  .side-name {
+    font-size: clamp(1.1rem, 3.5vw, 1.7rem);
+  }
+
+  .side-score {
+    font-size: clamp(3.2rem, 12vw, 5.5rem);
+    margin: 0.05rem 0 0.25rem;
+  }
+
+  .side-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.3rem;
+    width: min(100%, 240px);
+  }
+
+  .stat-block {
+    padding: 0.3rem 0.25rem;
+  }
+
+  .ball-flag {
+    margin-top: 0.35rem;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.58rem;
+  }
+
+  .mid-period {
+    font-size: 1.1rem;
+    letter-spacing: 0.12em;
+  }
+
+  .mid-clock {
+    font-size: clamp(2rem, 6vw, 3.2rem);
+  }
+
+  .shot-ring {
+    width: 78px;
+    height: 78px;
+  }
+
+  .shot-core strong {
+    font-size: 1.5rem;
+  }
+
+  .period-board {
+    width: min(100%, 200px);
+    font-size: 0.7rem;
+  }
+
+  .period-board th,
+  .period-board td {
+    padding: 0.2rem 0.25rem;
+  }
+
+  .display-ticker {
+    min-height: 2.4rem;
+  }
+
+  .ticker-track {
+    padding: 0.35rem 0.55rem;
+    gap: 0.45rem 0.7rem;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .ticker-team {
+    font-size: 1rem;
+  }
+
+  .ticker-pts {
+    font-size: 1.25rem;
+  }
+
+  .ticker-player {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 
