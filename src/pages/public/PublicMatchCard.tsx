@@ -1,7 +1,7 @@
 import { LiveClock } from '../../components/LiveClock'
 import { TeamLogo } from '../../components/TeamLogo'
 import type { Match, TournamentTeam } from '../../types/tournament'
-import { formatTime } from '../../utils/datetime'
+import { formatTimeRange } from '../../utils/datetime'
 
 function Side({ team, winner, align }: { team?: TournamentTeam; winner: boolean; align: 'home' | 'away' }) {
   return (
@@ -24,9 +24,11 @@ function Side({ team, winner, align }: { team?: TournamentTeam; winner: boolean;
 export function PublicMatchCard({
   match,
   teamById,
+  matchMinutes,
 }: {
   match: Match
   teamById: Map<string, TournamentTeam>
+  matchMinutes?: number
 }) {
   const home = match.home_team_id ? teamById.get(match.home_team_id) : undefined
   const away = match.away_team_id ? teamById.get(match.away_team_id) : undefined
@@ -35,7 +37,7 @@ export function PublicMatchCard({
   return (
     <div className={`match-row public status-${match.status}`}>
       <div className="mr-meta">
-        <strong>{formatTime(match.scheduled_at)}</strong>
+        <strong>{formatTimeRange(match.scheduled_at, matchMinutes)}</strong>
         <span>{match.round_label}</span>
         {match.venue && <span className="muted">{match.venue}</span>}
       </div>

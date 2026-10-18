@@ -3,7 +3,7 @@ import { LiveClock } from '../../components/LiveClock'
 import { TeamLogo } from '../../components/TeamLogo'
 import { resetMatch, updateMatch } from '../../lib/tournamentApi'
 import type { Match, TournamentTeam } from '../../types/tournament'
-import { formatTime, fromLocalInput, toLocalInput } from '../../utils/datetime'
+import { formatTimeRange, fromLocalInput, toLocalInput } from '../../utils/datetime'
 
 const STATUS_LABEL: Record<Match['status'], string> = {
   scheduled: 'Terjadwal',
@@ -46,7 +46,9 @@ export function MatchRow({
   onOpen,
   onChanged,
   showLabel = true,
+  matchMinutes,
 }: {
+  matchMinutes?: number
   match: Match
   teams: TournamentTeam[]
   teamById: Map<string, TournamentTeam>
@@ -87,7 +89,7 @@ export function MatchRow({
   return (
     <div className={`match-row status-${match.status}`}>
       <div className="mr-meta">
-        <strong>{formatTime(match.scheduled_at)}</strong>
+        <strong>{formatTimeRange(match.scheduled_at, matchMinutes)}</strong>
         {showLabel && <span>{match.round_label}</span>}
         {match.venue && <span className="muted">{match.venue}</span>}
       </div>

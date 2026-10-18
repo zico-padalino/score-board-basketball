@@ -3,13 +3,20 @@ import {
   assignSchedule,
   buildGroupMatches,
   buildKnockoutMatches,
+  estimateMatchMinutes,
+  matchMinutesOf,
   resolveSettings,
   seedsFromGroups,
   shuffle,
   standingsByGroup,
   type ScheduleOptions,
 } from '../../lib/tournament'
-import { deleteStageMatches, insertMatches } from '../../lib/tournamentApi'
+import {
+  deleteStageMatches,
+  insertMatches,
+  updateMatch,
+  updateTournament,
+} from '../../lib/tournamentApi'
 import type { Match, Tournament, TournamentTeam } from '../../types/tournament'
 import { dayKey, formatDay, toLocalInput } from '../../utils/datetime'
 import { MatchRow } from './MatchRow'
@@ -17,6 +24,11 @@ import { MatchRow } from './MatchRow'
 type Filter = 'all' | 'group' | 'knockout'
 
 function defaultStart(matches: Match[]) {
+  const firstPending = matches
+    .filter((m) => m.status === 'scheduled' && m.scheduled_at)
+    .map((m) => m.scheduled_at as string)
+    .sort()[0]
+  if (firstPending) return toLocalInput(firstPending)
   const last = matches
     .map((m) => m.scheduled_at)
     .filter((v): v is string => Boolean(v))
@@ -55,10 +67,22 @@ export function ScheduleTab({
   const [shuffleSeeds, setShuffleSeeds] = useState(false)
   const [opts, setOpts] = useState<ScheduleOptions>(() => ({
     start: defaultStart(matches),
-    gapMinutes: 90,
+    matchMinutes: matchMinutesOf(settings),
+    breakMinutes: settings.breakMinutes ?? 15,
     perDay: 4,
     venue: '',
   }))
+  const estimate = estimateMatchMinutes(settings.periodMinutes)
+  const slotMinutes = opts.matchMinutes + opts.breakMinutes
+
+  const rememberTiming = () =>
+    updateTournament(tournament.id, {
+      settings: {
+        ...tournament.settings,
+        matchMinutes: opts.matchMinutes,
+        breakMinutes: opts.breakMinutes,
+      },
+    })
 
   const run = async (task: () => Promise<void>) => {
     setBusy(true)
@@ -97,6 +121,7 @@ export function ScheduleTab({
       )
       if (groupMatches.length) await deleteStageMatches(tournament.id, 'group')
       await insertMatches(drafts)
+      await rememberTiming()
     })
 
   const generateKnockout = () =>
@@ -121,6 +146,31 @@ export function ScheduleTab({
       const drafts = assignSchedule(buildKnockoutMatches(tournament.id, seeds), opts)
       if (knockoutMatches.length) await deleteStageMatches(tournament.id, 'knockout')
       await insertMatches(drafts)
+      await rememberTiming()
+    })
+
+  const retime = () =>
+    run(async () => {
+      const pending = matches
+        .filter((m) => m.status === 'scheduled' && (filter === 'all' || m.stage === filter))
+        .sort(
+          (a, b) =>
+            (a.stage === b.stage ? 0 : a.stage === 'group' ? -1 : 1) ||
+            (a.scheduled_at ?? '').localeCompare(b.scheduled_at ?? '') ||
+            a.round - b.round ||
+            a.bracket_index - b.bracket_index,
+        )
+      if (pending.length === 0) throw new Error('Tidak ada laga terjadwal yang bisa diatur ulang')
+      const ok = window.confirm(
+        `Atur ulang jam ${pending.length} laga yang belum dimainkan mulai ${new Date(opts.start).toLocaleString('id-ID')}, ` +
+          `tiap laga ${opts.matchMinutes} menit + jeda ${opts.breakMinutes} menit?`,
+      )
+      if (!ok) return
+      const timed = assignSchedule(pending, opts)
+      await Promise.all(
+        timed.map((m) => updateMatch(m.id, { scheduled_at: m.scheduled_at, venue: m.venue })),
+      )
+      await rememberTiming()
     })
 
   const visible = matches.filter((m) => filter === 'all' || m.stage === filter)
@@ -151,7 +201,7 @@ export function ScheduleTab({
           <h3>Buat jadwal</h3>
         </summary>
         {error && <p className="logo-error">{error}</p>}
-        <div className="grid-3">
+        <div className="grid-4">
           <div className="field">
             <label htmlFor="gStart">Mulai</label>
             <input
@@ -162,14 +212,25 @@ export function ScheduleTab({
             />
           </div>
           <div className="field">
-            <label htmlFor="gGap">Jeda antar laga (menit)</label>
+            <label htmlFor="gMatch">Lama pertandingan (menit)</label>
             <input
-              id="gGap"
+              id="gMatch"
               type="number"
-              min={15}
-              step={15}
-              value={opts.gapMinutes}
-              onChange={(e) => setOpts({ ...opts, gapMinutes: Number(e.target.value) || 90 })}
+              min={10}
+              step={5}
+              value={opts.matchMinutes}
+              onChange={(e) => setOpts({ ...opts, matchMinutes: Number(e.target.value) || estimate })}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="gBreak">Jeda antar laga (menit)</label>
+            <input
+              id="gBreak"
+              type="number"
+              min={0}
+              step={5}
+              value={opts.breakMinutes}
+              onChange={(e) => setOpts({ ...opts, breakMinutes: Math.max(0, Number(e.target.value) || 0) })}
             />
           </div>
           <div className="field">
@@ -192,6 +253,24 @@ export function ScheduleTab({
             onChange={(e) => setOpts({ ...opts, venue: e.target.value })}
           />
         </div>
+        <p className="muted timing-hint">
+          Laga berikutnya mulai {slotMinutes} menit setelah laga sebelumnya ({opts.matchMinutes} menit
+          main + {opts.breakMinutes} menit jeda). Perkiraan lama laga dengan kuarter{' '}
+          {settings.periodMinutes} menit: {estimate} menit (4×{settings.periodMinutes} menit jam
+          bersih, ditambah waktu jam berhenti, jeda kuarter, dan halftime).
+          {opts.matchMinutes !== estimate && (
+            <>
+              {' '}
+              <button
+                type="button"
+                className="link-btn"
+                onClick={() => setOpts({ ...opts, matchMinutes: estimate })}
+              >
+                Pakai perkiraan
+              </button>
+            </>
+          )}
+        </p>
         <div className="btn-row">
           {hasGroups && (
             <button className="btn btn-primary" type="button" disabled={busy} onClick={generateGroups}>
@@ -216,6 +295,11 @@ export function ScheduleTab({
               />
               Acak urutan tim (undian)
             </label>
+          )}
+          {matches.some((m) => m.status === 'scheduled') && (
+            <button className="btn btn-ghost" type="button" disabled={busy} onClick={retime}>
+              Atur ulang jam jadwal yang ada
+            </button>
           )}
         </div>
         <p className="muted">
@@ -259,6 +343,7 @@ export function ScheduleTab({
                 teamById={teamById}
                 onOpen={onOpen}
                 onChanged={reload}
+                matchMinutes={matchMinutesOf(settings)}
               />
             ))}
           </div>

@@ -26,6 +26,13 @@ export function formatTime(iso: string | null): string {
   return new Date(iso).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
 }
 
+/** "20.00–21.15" berdasarkan jam mulai dan perkiraan lama laga. */
+export function formatTimeRange(iso: string | null, minutes?: number): string {
+  if (!iso || !minutes) return formatTime(iso)
+  const end = new Date(new Date(iso).getTime() + minutes * 60000).toISOString()
+  return `${formatTime(iso)}–${formatTime(end)}`
+}
+
 export function dayKey(iso: string | null): string {
   if (!iso) return 'none'
   return toLocalInput(iso).slice(0, 10)

@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useTournamentData } from '../../hooks/useTournamentData'
+import { matchMinutesOf, resolveSettings } from '../../lib/tournament'
 import type { Match } from '../../types/tournament'
 import { FORMAT_LABELS } from '../../types/tournament'
 import { dayKey, formatDay } from '../../utils/datetime'
@@ -66,6 +67,7 @@ export function PublicTournamentPage() {
   const requested = params.get('tab') as Tab | null
   const tab: Tab = tabs.some((t) => t.id === requested) ? (requested as Tab) : 'jadwal'
   const live = matches.filter((m) => m.status === 'live')
+  const matchMinutes = matchMinutesOf(resolveSettings(tournament.settings))
 
   return (
     <main className="page wide">
@@ -108,7 +110,7 @@ export function PublicTournamentPage() {
               <h3>Sedang berlangsung</h3>
               <div className="match-list">
                 {live.map((m) => (
-                  <PublicMatchCard key={m.id} match={m} teamById={teamById} />
+                  <PublicMatchCard key={m.id} match={m} teamById={teamById} matchMinutes={matchMinutes} />
                 ))}
               </div>
             </section>
@@ -123,7 +125,7 @@ export function PublicTournamentPage() {
               <h3>{day.label}</h3>
               <div className="match-list">
                 {day.list.map((m) => (
-                  <PublicMatchCard key={m.id} match={m} teamById={teamById} />
+                  <PublicMatchCard key={m.id} match={m} teamById={teamById} matchMinutes={matchMinutes} />
                 ))}
               </div>
             </section>

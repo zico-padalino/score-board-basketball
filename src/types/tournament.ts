@@ -9,6 +9,10 @@ export interface TournamentSettings {
   advancePerGroup: number
   doubleRoundRobin: boolean
   periodMinutes: number
+  /** Perkiraan lama satu laga di dunia nyata (termasuk jeda kuarter & jam berhenti). */
+  matchMinutes?: number
+  /** Jeda antara selesai satu laga dan mulai laga berikutnya. */
+  breakMinutes?: number
 }
 
 export interface Tournament {

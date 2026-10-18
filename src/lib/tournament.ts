@@ -282,26 +282,42 @@ export function seedsFromGroups(
   return seeds
 }
 
+/**
+ * Perkiraan lama satu laga: 4 kuarter jam bersih, +50% untuk jam berhenti
+ * (foul, timeout, lemparan bebas), + jeda antar kuarter & halftime. Dibulatkan ke 5 menit.
+ */
+export function estimateMatchMinutes(periodMinutes: number): number {
+  const clock = periodMinutes * 4
+  return Math.ceil((clock * 1.5 + 15) / 5) * 5
+}
+
+export function matchMinutesOf(settings: TournamentSettings): number {
+  return settings.matchMinutes ?? estimateMatchMinutes(settings.periodMinutes)
+}
+
 export interface ScheduleOptions {
   start: string
-  gapMinutes: number
+  matchMinutes: number
+  breakMinutes: number
   perDay: number
   venue: string
 }
 
-/** Isi tanggal/jam berurutan: `perDay` laga per hari, jeda `gapMinutes`. */
-export function assignSchedule<T extends MatchDraft>(
+/** Isi tanggal/jam berurutan: `perDay` laga per hari, tiap slot = lama laga + jeda. */
+export function assignSchedule<T extends Pick<MatchDraft, 'scheduled_at' | 'venue'>>(
   matches: T[],
   opts: ScheduleOptions,
 ): T[] {
   const start = opts.start ? new Date(opts.start) : null
   const perDay = Math.max(1, opts.perDay)
+  const slot = Math.max(1, opts.matchMinutes) + Math.max(0, opts.breakMinutes)
   return matches.map((m, i) => {
-    if (!start || Number.isNaN(start.getTime())) return { ...m, venue: opts.venue }
+    const venue = opts.venue.trim() || m.venue
+    if (!start || Number.isNaN(start.getTime())) return { ...m, venue }
     const d = new Date(start)
     d.setDate(d.getDate() + Math.floor(i / perDay))
-    d.setMinutes(d.getMinutes() + (i % perDay) * opts.gapMinutes)
-    return { ...m, scheduled_at: d.toISOString(), venue: opts.venue }
+    d.setMinutes(d.getMinutes() + (i % perDay) * slot)
+    return { ...m, scheduled_at: d.toISOString(), venue }
   })
 }
 
