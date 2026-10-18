@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { TeamLogo } from '../components/TeamLogo'
 import { snapshot } from '../hooks/useScoreboardSync'
-import { gameId } from '../lib/gameRoom'
+import { courtLabel, gameId } from '../lib/gameRoom'
 import { finalizeMatch } from '../lib/tournamentApi'
 import { useGameStore } from '../store/gameStore'
 import type { Player, TeamId } from '../types/game'
@@ -482,6 +482,9 @@ export function OperatorPage() {
               {state.status}
             </span>
             <span className="op-period">{periodLabel(state.period, periodsOf(state.config))}</span>
+            <span className="op-court" title="Semua perangkat admin di lapangan ini sinkron">
+              {courtLabel(gameId)}
+            </span>
           </div>
 
           <div className="op-clock-block">
@@ -593,7 +596,7 @@ export function OperatorPage() {
               className="btn btn-sm btn-navy"
               to={`/display?game=${gameId}`}
               target="_blank"
-              title={`Kode game ${gameId}`}
+              title={`Layar penonton ${courtLabel(gameId)}`}
             >
               Layar
             </Link>

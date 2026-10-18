@@ -3,31 +3,68 @@ import type { RealtimeChannel } from '@supabase/supabase-js'
 import { useGameStore } from '../store/gameStore'
 import type { GameState } from '../types/game'
 import { supabase } from '../lib/supabase'
-import { gameId, joinedFromLink } from '../lib/gameRoom'
+import { gameId } from '../lib/gameRoom'
 import { saveMatchProgress } from '../lib/tournamentApi'
 
-const CHANNEL = 'courtside-state-v1'
+const CHANNEL = 'halcion-state-v2'
 const TABLE = 'games'
 const LOCAL_GAP_MS = 80
 const REMOTE_CLOCK_GAP_MS = 1000
 const SAVE_GAP_MS = 2000
 
-type SyncPayload = Pick<
+type SyncKey = Pick<
   GameState,
   | 'home'
   | 'away'
   | 'period'
-  | 'clockMs'
-  | 'shotClockMs'
   | 'clockRunning'
   | 'possession'
   | 'status'
   | 'scoreEvents'
+  | 'events'
   | 'config'
+  | 'match'
 >
 
-function pick(state: GameState): SyncPayload {
+type ClockPayload = Pick<GameState, 'clockMs' | 'shotClockMs'>
+
+/**
+ * `full` = state lengkap (setiap perubahan selain jam).
+ * `clock` = hanya angka jam; sengaja tanpa `clockRunning` supaya pesan jam
+ * yang terlambat dari perangkat lain tidak menjalankan ulang jam yang di-pause.
+ */
+type SyncMessage =
+  | { kind: 'full'; data: GameState }
+  | { kind: 'clock'; data: ClockPayload }
+
+function keyOf(state: GameState): SyncKey {
   return {
+    home: state.home,
+    away: state.away,
+    period: state.period,
+    clockRunning: state.clockRunning,
+    possession: state.possession,
+    status: state.status,
+    scoreEvents: state.scoreEvents,
+    events: state.events,
+    config: state.config,
+    match: state.match,
+  }
+}
+
+function isClockOnlyChange(a: SyncKey, b: SyncKey) {
+  return (Object.keys(a) as (keyof SyncKey)[]).every((k) => a[k] === b[k])
+}
+
+function clockOf(state: GameState): ClockPayload {
+  return { clockMs: state.clockMs, shotClockMs: state.shotClockMs }
+}
+
+export function snapshot(state: GameState): GameState {
+  return {
+    status: state.status,
+    match: state.match,
+    config: state.config,
     home: state.home,
     away: state.away,
     period: state.period,
@@ -35,38 +72,28 @@ function pick(state: GameState): SyncPayload {
     shotClockMs: state.shotClockMs,
     clockRunning: state.clockRunning,
     possession: state.possession,
-    status: state.status,
     scoreEvents: state.scoreEvents,
-    config: state.config,
-  }
-}
-
-export function snapshot(state: GameState): GameState {
-  return {
-    ...pick(state),
-    match: state.match,
     events: state.events,
     playerStats: state.playerStats,
     createdAt: state.createdAt,
   }
 }
 
-function isClockOnlyChange(a: SyncPayload, b: SyncPayload) {
-  return (
-    a.home === b.home &&
-    a.away === b.away &&
-    a.period === b.period &&
-    a.clockRunning === b.clockRunning &&
-    a.possession === b.possession &&
-    a.status === b.status &&
-    a.scoreEvents === b.scoreEvents &&
-    a.config === b.config
-  )
+function applyMessage(msg: SyncMessage | undefined): boolean {
+  if (msg?.kind === 'full' && msg.data?.home && msg.data?.away) {
+    useGameStore.setState(msg.data)
+    return true
+  }
+  if (msg?.kind === 'clock' && typeof msg.data?.clockMs === 'number') {
+    useGameStore.setState(msg.data)
+    return true
+  }
+  return false
 }
 
 function openLocalChannel() {
   try {
-    return new BroadcastChannel(CHANNEL)
+    return new BroadcastChannel(`${CHANNEL}:${gameId}`)
   } catch {
     return null
   }
@@ -76,6 +103,16 @@ function openRemoteChannel() {
   return supabase?.channel(`game:${gameId}`, {
     config: { broadcast: { self: false } },
   })
+}
+
+function listenRemote(channel: RealtimeChannel, onMessage: (msg: SyncMessage) => void) {
+  return channel
+    .on('broadcast', { event: 'full' }, ({ payload }) =>
+      onMessage({ kind: 'full', data: payload as GameState }),
+    )
+    .on('broadcast', { event: 'clock' }, ({ payload }) =>
+      onMessage({ kind: 'clock', data: payload as ClockPayload }),
+    )
 }
 
 async function fetchRemoteState(): Promise<GameState | null> {
@@ -89,7 +126,6 @@ async function fetchRemoteState(): Promise<GameState | null> {
   return data.state as GameState
 }
 
-let joinHandled = !joinedFromLink
 let flushPending: (() => void) | null = null
 
 /** Simpan state sekarang ke Supabase tanpa menunggu jeda (mis. sebelum ganti laga). */
@@ -105,8 +141,10 @@ function saveMatch(state: GameState) {
 }
 
 /**
- * Sinkron layar penonton dengan operator: antar tab via BroadcastChannel,
+ * Sinkron scoreboard per kode lapangan: antar tab via BroadcastChannel,
  * antar perangkat via Supabase Realtime, dan state disimpan ke tabel `games`.
+ * Mode `broadcast` (admin) mengirim sekaligus menerima perubahan operator lain;
+ * mode `receive` (layar penonton) hanya menerima.
  */
 export function useScoreboardSync(mode: 'broadcast' | 'receive') {
   const clockRunning = useGameStore((s) => s.clockRunning)
@@ -114,9 +152,7 @@ export function useScoreboardSync(mode: 'broadcast' | 'receive') {
   useEffect(() => {
     const bc = openLocalChannel()
     const channel = openRemoteChannel()
-    return mode === 'receive'
-      ? receive(bc, channel)
-      : broadcast(bc, channel)
+    return mode === 'receive' ? receive(bc, channel) : broadcast(bc, channel)
   }, [mode])
 
   useEffect(() => {
@@ -138,18 +174,14 @@ export function useScoreboardSync(mode: 'broadcast' | 'receive') {
 
 function receive(bc: BroadcastChannel | null, channel?: RealtimeChannel) {
   let gotLive = false
-  const apply = (data: SyncPayload | undefined) => {
-    if (!data?.home || !data?.away) return
-    gotLive = true
-    useGameStore.setState(data)
+  const apply = (msg: SyncMessage | undefined) => {
+    if (applyMessage(msg)) gotLive = true
   }
 
-  if (bc) bc.onmessage = (ev: MessageEvent<SyncPayload>) => apply(ev.data)
+  if (bc) bc.onmessage = (ev: MessageEvent<SyncMessage>) => apply(ev.data)
 
   if (channel) {
-    channel
-      .on('broadcast', { event: 'state' }, ({ payload }) => apply(payload))
-      .subscribe()
+    listenRemote(channel, apply).subscribe()
     void fetchRemoteState().then((state) => {
       if (state && !gotLive) useGameStore.setState(state)
     })
@@ -164,23 +196,34 @@ function receive(bc: BroadcastChannel | null, channel?: RealtimeChannel) {
 function broadcast(bc: BroadcastChannel | null, channel?: RealtimeChannel) {
   let disposed = false
   let ready = false
-  let hydrated = joinHandled
+  let hydrated = !supabase
+  let applying = false
+  /** Hanya perangkat yang menekan Start yang mengirim angka jam selama jam berjalan. */
+  let ownsClock = false
   let lastLocal = 0
-  let lastRemote = 0
-  let prev: SyncPayload | null = null
-  let remoteTimer: number | undefined
+  let lastClock = 0
+  let prev: SyncKey | null = keyOf(useGameStore.getState())
+  let clockTimer: number | undefined
   let saveTimer: number | undefined
 
-  const sendRemote = () => {
-    window.clearTimeout(remoteTimer)
-    remoteTimer = undefined
+  const send = (msg: SyncMessage) => {
     if (!channel || !ready || !hydrated) return
-    lastRemote = performance.now()
-    void channel.send({
-      type: 'broadcast',
-      event: 'state',
-      payload: pick(useGameStore.getState()),
-    })
+    void channel.send({ type: 'broadcast', event: msg.kind, payload: msg.data })
+  }
+
+  const sendFull = () => {
+    window.clearTimeout(clockTimer)
+    clockTimer = undefined
+    lastClock = performance.now()
+    send({ kind: 'full', data: snapshot(useGameStore.getState()) })
+  }
+
+  const sendClock = () => {
+    clockTimer = undefined
+    const state = useGameStore.getState()
+    if (state.clockRunning && !ownsClock) return
+    lastClock = performance.now()
+    send({ kind: 'clock', data: clockOf(state) })
   }
 
   const save = () => {
@@ -208,49 +251,69 @@ function broadcast(bc: BroadcastChannel | null, channel?: RealtimeChannel) {
     }
   }
 
+  /** Terapkan perubahan dari operator lain tanpa memantulkannya kembali. */
+  const applyRemote = (msg: SyncMessage | undefined) => {
+    const wasRunning = useGameStore.getState().clockRunning
+    applying = true
+    try {
+      if (!applyMessage(msg)) return false
+    } finally {
+      applying = false
+    }
+    if (msg?.kind === 'full' && msg.data.clockRunning !== wasRunning) ownsClock = false
+    prev = keyOf(useGameStore.getState())
+    return true
+  }
+
   const unsub = useGameStore.subscribe((state) => {
-    const payload = pick(state)
+    if (applying) return
+    const key = keyOf(state)
+    const clockOnly = prev !== null && isClockOnlyChange(prev, key)
+    if (prev && !prev.clockRunning && key.clockRunning) ownsClock = true
+    prev = key
     const now = performance.now()
 
-    if (bc && (!state.clockRunning || now - lastLocal >= LOCAL_GAP_MS)) {
+    if (bc && (!clockOnly || now - lastLocal >= LOCAL_GAP_MS)) {
       lastLocal = now
-      bc.postMessage(payload)
+      bc.postMessage(
+        clockOnly
+          ? ({ kind: 'clock', data: clockOf(state) } satisfies SyncMessage)
+          : ({ kind: 'full', data: snapshot(state) } satisfies SyncMessage),
+      )
     }
 
     if (channel) {
-      const clockOnly = prev !== null && isClockOnlyChange(prev, payload)
-      const wait = REMOTE_CLOCK_GAP_MS - (now - lastRemote)
-      if (!clockOnly || wait <= 0) sendRemote()
-      else if (remoteTimer === undefined) {
-        remoteTimer = window.setTimeout(sendRemote, wait)
-      }
+      const wait = REMOTE_CLOCK_GAP_MS - (now - lastClock)
+      if (!clockOnly) sendFull()
+      else if (wait <= 0) sendClock()
+      else if (clockTimer === undefined) clockTimer = window.setTimeout(sendClock, wait)
     }
 
-    prev = payload
     scheduleSave()
   })
 
-  bc?.postMessage(pick(useGameStore.getState()))
+  if (bc) bc.onmessage = (ev: MessageEvent<SyncMessage>) => applyRemote(ev.data)
 
   if (channel) {
-    channel.subscribe((status) => {
+    listenRemote(channel, (msg) => {
+      if (applyRemote(msg) && msg.kind === 'full') hydrated = true
+    }).subscribe((status) => {
       if (status !== 'SUBSCRIBED') return
       ready = true
-      sendRemote()
+      if (hydrated) sendFull()
     })
   }
 
-  if (!hydrated) {
+  if (supabase) {
     void fetchRemoteState().then((state) => {
-      if (disposed) return
-      joinHandled = true
+      if (disposed || hydrated) return
+      if (state) applyRemote({ kind: 'full', data: state })
       hydrated = true
-      if (state) useGameStore.setState(state)
-      else save()
-      sendRemote()
+      if (!state) {
+        save()
+        sendFull()
+      }
     })
-  } else {
-    save()
   }
 
   const onHide = () => save()
@@ -261,7 +324,7 @@ function broadcast(bc: BroadcastChannel | null, channel?: RealtimeChannel) {
     if (flushPending === save) flushPending = null
     unsub()
     window.removeEventListener('pagehide', onHide)
-    window.clearTimeout(remoteTimer)
+    window.clearTimeout(clockTimer)
     if (saveTimer !== undefined) save()
     bc?.close()
     if (channel) void supabase?.removeChannel(channel)

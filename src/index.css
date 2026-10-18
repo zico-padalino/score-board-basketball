@@ -730,6 +730,37 @@ button {
   font-weight: 800;
 }
 
+.op-court {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(245, 250, 252, 0.6);
+  white-space: nowrap;
+}
+
+.court-picker {
+  display: grid;
+  grid-template-columns: minmax(160px, 220px) 1fr;
+  gap: 0.75rem;
+  align-items: end;
+  margin-top: 0.85rem;
+}
+
+.court-picker .field {
+  margin: 0;
+}
+
+.court-picker p {
+  margin: 0 0 0.6rem;
+}
+
+@media (max-width: 760px) {
+  .court-picker {
+    grid-template-columns: 1fr;
+  }
+}
+
 .op-toolbar .op-shot-toggle.on {
   background: rgba(42, 157, 143, 0.28);
   color: #9eebdf;

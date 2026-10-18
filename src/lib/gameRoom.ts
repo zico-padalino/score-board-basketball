@@ -1,10 +1,8 @@
-const STORAGE_KEY = 'courtside-game-id'
-const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+const STORAGE_KEY = 'halcion-court'
 
-function randomCode(length = 6) {
-  const bytes = crypto.getRandomValues(new Uint8Array(length))
-  return Array.from(bytes, (b) => ALPHABET[b % ALPHABET.length]).join('')
-}
+/** Kode lapangan yang dipakai bersama oleh semua perangkat admin. */
+export const DEFAULT_COURT = 'LAPANGAN1'
+export const COURTS = ['LAPANGAN1', 'LAPANGAN2', 'LAPANGAN3']
 
 function normalize(code: string | null) {
   const clean = (code ?? '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '')
@@ -14,18 +12,26 @@ function normalize(code: string | null) {
 function resolve() {
   const fromUrl = normalize(new URLSearchParams(window.location.search).get('game'))
   const stored = normalize(localStorage.getItem(STORAGE_KEY))
-  const id = fromUrl ?? stored ?? randomCode()
+  const id = fromUrl ?? stored ?? DEFAULT_COURT
   localStorage.setItem(STORAGE_KEY, id)
-  return { id, joined: fromUrl !== null && fromUrl !== stored }
+  return id
 }
 
-const room = resolve()
+/** Kode game/lapangan aktif di perangkat ini. */
+export const gameId = resolve()
 
-/** Kode game aktif di perangkat ini. */
-export const gameId = room.id
+export function courtLabel(code: string) {
+  const m = code.match(/^LAPANGAN(\d+)$/)
+  return m ? `Lapangan ${m[1]}` : code
+}
 
-/** True kalau dibuka lewat `?game=KODE` milik perangkat lain — state diambil dari cloud. */
-export const joinedFromLink = room.joined
+/** Pindah lapangan: halaman dimuat ulang supaya sinkron dengan kode baru. */
+export function switchCourt(code: string) {
+  const next = normalize(code)
+  if (!next || next === gameId) return
+  localStorage.setItem(STORAGE_KEY, next)
+  window.location.assign(`${window.location.pathname}?game=${next}`)
+}
 
 export function displayUrl() {
   return `${window.location.origin}/display?game=${gameId}`

@@ -1,7 +1,7 @@
 import { useRef, useState, type RefObject } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { TeamLogo } from '../components/TeamLogo'
-import { displayUrl, gameId } from '../lib/gameRoom'
+import { COURTS, courtLabel, displayUrl, gameId, switchCourt } from '../lib/gameRoom'
 import { supabase, uploadLogo } from '../lib/supabase'
 import { countLines, shufflePlayersIntoTeams } from '../lib/tournament'
 import { useGameStore } from '../store/gameStore'
@@ -409,12 +409,30 @@ export function SetupPage() {
           </button>
         </div>
         {supabase && (
-          <p className="muted" style={{ marginTop: '0.75rem' }}>
-            Kode game: <strong>{gameId}</strong> · Layar di perangkat lain:{' '}
-            <a href={displayUrl()} target="_blank" rel="noreferrer">
-              {displayUrl()}
-            </a>
-          </p>
+          <div className="court-picker">
+            <div className="field">
+              <label htmlFor="courtSelect">Lapangan</label>
+              <select
+                id="courtSelect"
+                value={COURTS.includes(gameId) ? gameId : ''}
+                onChange={(e) => switchCourt(e.target.value)}
+              >
+                {!COURTS.includes(gameId) && <option value="">{gameId}</option>}
+                {COURTS.map((c) => (
+                  <option key={c} value={c}>
+                    {courtLabel(c)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <p className="muted">
+              Semua perangkat admin di <strong>{courtLabel(gameId)}</strong> otomatis memakai
+              scoreboard yang sama. Layar penonton:{' '}
+              <a href={displayUrl()} target="_blank" rel="noreferrer">
+                {displayUrl()}
+              </a>
+            </p>
+          </div>
         )}
       </section>
     </main>
