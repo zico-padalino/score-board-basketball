@@ -3,6 +3,7 @@ import { TeamLogo } from '../../components/TeamLogo'
 import { getMatchState } from '../../lib/tournamentApi'
 import type { GameState, Player, PlayerStats } from '../../types/game'
 import type { Match, TournamentTeam } from '../../types/tournament'
+import { teamScore } from '../../utils/stats'
 
 interface Row {
   player: Player
@@ -13,10 +14,13 @@ function RosterTable({
   team,
   rows,
   withStats,
+  teamOnly = 0,
 }: {
   team?: TournamentTeam
   rows: Row[]
   withStats: boolean
+  /** Poin tim yang belum tercatat ke pemain. */
+  teamOnly?: number
 }) {
   return (
     <div className="roster-card">
@@ -60,6 +64,16 @@ function RosterTable({
                 )}
               </tr>
             ))}
+            {withStats && teamOnly !== 0 && (
+              <tr className="team-points">
+                <td />
+                <td className="name">Poin tim (belum per pemain)</td>
+                <td>
+                  <strong>{teamOnly}</strong>
+                </td>
+                <td />
+              </tr>
+            )}
           </tbody>
         </table>
       )}
@@ -101,11 +115,16 @@ export function MatchRosters({
   }
 
   const withStats = played && state !== null
+  const teamOnly = (side: 'home' | 'away') => {
+    if (!state) return 0
+    const players = state[side].players.reduce((s, p) => s + (state.playerStats[p.id]?.pts ?? 0), 0)
+    return teamScore(state.scoreEvents, side) - players
+  }
 
   return (
     <div className="match-rosters">
-      <RosterTable team={home} rows={rowsFor('home', home)} withStats={withStats} />
-      <RosterTable team={away} rows={rowsFor('away', away)} withStats={withStats} />
+      <RosterTable team={home} rows={rowsFor('home', home)} withStats={withStats} teamOnly={teamOnly('home')} />
+      <RosterTable team={away} rows={rowsFor('away', away)} withStats={withStats} teamOnly={teamOnly('away')} />
       {withStats && match.status === 'live' && (
         <p className="muted roster-legend">● = sedang di lapangan</p>
       )}

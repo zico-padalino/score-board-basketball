@@ -4073,6 +4073,90 @@ button {
   margin-top: 0.25rem;
 }
 
+.roster-table tr.team-points td {
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.mr-points {
+  display: block;
+}
+
+.pp-editor {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.pp-editor > p {
+  margin: 0;
+}
+
+.pp-teams {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.pp-team header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
+.pp-left {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--orange-deep);
+}
+
+.pp-left.ok {
+  color: var(--success);
+}
+
+.pp-left.over {
+  color: var(--danger);
+}
+
+.pp-rows {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.pp-row {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) 4.5rem;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+}
+
+.pp-row b {
+  color: var(--navy);
+}
+
+.pp-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pp-row input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.35rem 0.45rem;
+  text-align: center;
+  font-size: 16px;
+}
+
+@media (max-width: 760px) {
+  .pp-teams {
+    grid-template-columns: 1fr;
+  }
+}
+
 .box-score tr.team-points td {
   font-style: italic;
   color: var(--ink-soft);

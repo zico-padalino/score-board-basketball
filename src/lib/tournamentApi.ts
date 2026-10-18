@@ -6,6 +6,7 @@ import type {
   TournamentSettings,
   TournamentTeam,
 } from '../types/tournament'
+import { emptyStats } from '../utils/stats'
 import { liveFromState } from './matchLive'
 import { supabase } from './supabase'
 import { matchWinner, type MatchDraft } from './tournament'
@@ -215,6 +216,29 @@ export async function editMatchScore(match: Match, homeScore: number, awayScore:
     ])
   }
   if (match.status === 'finished') await advanceWinner(match, homeScore, awayScore)
+}
+
+/**
+ * Isi poin pemain untuk laga yang poinnya tercatat sebagai skor tim saja.
+ * Skor tim tidak berubah; hanya PTS pemain di box score yang diperbarui.
+ */
+export async function savePlayerPoints(matchId: string, points: Record<string, number>) {
+  const state = await getMatchState(matchId)
+  if (!state) throw new Error('Statistik laga ini belum tersedia')
+  const playerStats = { ...state.playerStats }
+  for (const [pid, pts] of Object.entries(points)) {
+    const base = playerStats[pid] ?? emptyStats(pid)
+    playerStats[pid] = { ...base, pts: Math.max(0, Math.round(pts)) }
+  }
+  unwrap(
+    await db()
+      .from('match_states')
+      .upsert({
+        match_id: matchId,
+        state: { ...state, playerStats },
+        updated_at: new Date().toISOString(),
+      }),
+  )
 }
 
 /** Simpan hasil akhir; di babak gugur pemenang otomatis masuk laga berikutnya. */

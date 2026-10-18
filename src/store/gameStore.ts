@@ -124,6 +124,8 @@ interface GameActions {
   finishGame: () => void
   /** Koreksi skor tim (+/−) tanpa mengubah statistik pemain; skor tidak bisa di bawah 0. */
   correctScore: (teamId: TeamId, delta: number, playerId?: string | null) => void
+  /** Isi PTS pemain langsung (skor tim tidak berubah). */
+  setPlayerPoints: (points: Record<string, number>) => void
   /** Ubah skor tim langsung ke angka tertentu (lewat koreksi). */
   setTeamScore: (teamId: TeamId, value: number) => void
 }
@@ -644,6 +646,16 @@ export const useGameStore = create<Store>()(
             },
           ],
         })
+      },
+
+      setPlayerPoints: (points) => {
+        const state = get()
+        const playerStats = { ...state.playerStats }
+        for (const [pid, pts] of Object.entries(points)) {
+          const base = playerStats[pid] ?? emptyStats(pid)
+          playerStats[pid] = { ...base, pts: Math.max(0, Math.round(pts)) }
+        }
+        set({ playerStats })
       },
 
       setTeamScore: (teamId, value) => {

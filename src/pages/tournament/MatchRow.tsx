@@ -4,6 +4,7 @@ import { TeamLogo } from '../../components/TeamLogo'
 import { deleteMatch, editMatchScore, resetMatch, updateMatch } from '../../lib/tournamentApi'
 import { flushGameSave } from '../../hooks/useScoreboardSync'
 import { useGameStore } from '../../store/gameStore'
+import { PlayerPointsEditor } from './PlayerPointsEditor'
 import type { Match, TournamentTeam } from '../../types/tournament'
 import { formatTimeRange, fromLocalInput, toLocalInput } from '../../utils/datetime'
 
@@ -66,6 +67,7 @@ export function MatchRow({
   const [homeScore, setHomeScore] = useState(String(match.home_score))
   const [awayScore, setAwayScore] = useState(String(match.away_score))
   const [busy, setBusy] = useState(false)
+  const [pointsOpen, setPointsOpen] = useState(false)
 
   const startEdit = () => {
     setWhen(toLocalInput(match.scheduled_at))
@@ -179,6 +181,16 @@ export function MatchRow({
         >
           {openLabel}
         </button>
+        {showScore && (
+          <button
+            type="button"
+            className={`btn btn-sm btn-ghost ${pointsOpen ? 'active' : ''}`}
+            title="Isi poin tiap pemain untuk laga ini"
+            onClick={() => setPointsOpen((v) => !v)}
+          >
+            Poin pemain
+          </button>
+        )}
         <button
           type="button"
           className="btn btn-sm btn-ghost"
@@ -187,6 +199,21 @@ export function MatchRow({
           Edit
         </button>
       </div>
+
+      {pointsOpen && (
+        <div className="mr-edit mr-points">
+          <PlayerPointsEditor
+            match={match}
+            home={home}
+            away={away}
+            onClose={() => setPointsOpen(false)}
+            onSaved={() => {
+              setPointsOpen(false)
+              onChanged()
+            }}
+          />
+        </div>
+      )}
 
       {editing && (
         <div className="mr-edit">
