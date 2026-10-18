@@ -477,8 +477,6 @@ export const useGameStore = create<Store>()(
               timestamp: Date.now(),
             },
           ],
-          clockRunning: false,
-          status: 'paused',
         })
       },
 
