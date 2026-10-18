@@ -9,7 +9,7 @@ import { saveMatchProgress } from '../lib/tournamentApi'
 const CHANNEL = 'halcion-state-v2'
 const TABLE = 'games'
 const LOCAL_GAP_MS = 80
-const REMOTE_CLOCK_GAP_MS = 1000
+const REMOTE_CLOCK_GAP_MS = 500
 const SAVE_GAP_MS = 2000
 
 type SyncKey = Pick<
@@ -34,8 +34,8 @@ type ClockPayload = Pick<GameState, 'clockMs' | 'shotClockMs'>
  * yang terlambat dari perangkat lain tidak menjalankan ulang jam yang di-pause.
  */
 type SyncMessage =
-  | { kind: 'full'; data: GameState }
-  | { kind: 'clock'; data: ClockPayload }
+  | { kind: 'full'; data: GameState & { sentAt?: number } }
+  | { kind: 'clock'; data: ClockPayload & { sentAt?: number } }
 
 function keyOf(state: GameState): SyncKey {
   return {
@@ -79,13 +79,30 @@ export function snapshot(state: GameState): GameState {
   }
 }
 
+/** Batas koreksi jeda jaringan, supaya selisih jam antar perangkat tidak membuat jam melompat jauh. */
+const MAX_LAG_MS = 1500
+
+/** Kurangi jam yang sedang berjalan sebesar umur pesan (jeda jaringan). */
+function compensate<T extends ClockPayload>(data: T, running: boolean, sentAt?: number): T {
+  if (!running || typeof sentAt !== 'number') return data
+  const lag = Math.min(MAX_LAG_MS, Math.max(0, Date.now() - sentAt))
+  if (lag === 0) return data
+  return {
+    ...data,
+    clockMs: Math.max(0, data.clockMs - lag),
+    shotClockMs: Math.max(0, data.shotClockMs - lag),
+  }
+}
+
 function applyMessage(msg: SyncMessage | undefined): boolean {
   if (msg?.kind === 'full' && msg.data?.home && msg.data?.away) {
-    useGameStore.setState(msg.data)
+    const { sentAt, ...state } = msg.data
+    useGameStore.setState(compensate(state, state.clockRunning, sentAt))
     return true
   }
   if (msg?.kind === 'clock' && typeof msg.data?.clockMs === 'number') {
-    useGameStore.setState(msg.data)
+    const { sentAt, ...clock } = msg.data
+    useGameStore.setState(compensate(clock, useGameStore.getState().clockRunning, sentAt))
     return true
   }
   return false
@@ -108,22 +125,25 @@ function openRemoteChannel() {
 function listenRemote(channel: RealtimeChannel, onMessage: (msg: SyncMessage) => void) {
   return channel
     .on('broadcast', { event: 'full' }, ({ payload }) =>
-      onMessage({ kind: 'full', data: payload as GameState }),
+      onMessage({ kind: 'full', data: payload as GameState & { sentAt?: number } }),
     )
     .on('broadcast', { event: 'clock' }, ({ payload }) =>
-      onMessage({ kind: 'clock', data: payload as ClockPayload }),
+      onMessage({ kind: 'clock', data: payload as ClockPayload & { sentAt?: number } }),
     )
 }
 
+/** State terakhir dari database; jam yang berjalan dikoreksi sesuai umur data. */
 async function fetchRemoteState(): Promise<GameState | null> {
   if (!supabase) return null
   const { data, error } = await supabase
     .from(TABLE)
-    .select('state')
+    .select('state, updated_at')
     .eq('id', gameId)
     .maybeSingle()
   if (error || !data?.state?.home || !data?.state?.away) return null
-  return data.state as GameState
+  const state = data.state as GameState
+  const savedAt = data.updated_at ? new Date(data.updated_at as string).getTime() : undefined
+  return compensate(state, state.clockRunning, savedAt)
 }
 
 let flushPending: (() => void) | null = null
@@ -208,7 +228,11 @@ function broadcast(bc: BroadcastChannel | null, channel?: RealtimeChannel) {
 
   const send = (msg: SyncMessage) => {
     if (!channel || !ready || !hydrated) return
-    void channel.send({ type: 'broadcast', event: msg.kind, payload: msg.data })
+    void channel.send({
+      type: 'broadcast',
+      event: msg.kind,
+      payload: { ...msg.data, sentAt: Date.now() },
+    })
   }
 
   const sendFull = () => {
