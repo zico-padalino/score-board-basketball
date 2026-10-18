@@ -206,6 +206,14 @@ export function TournamentsPage() {
                 }
               />
             </div>
+            <label className="check-field">
+              <input
+                type="checkbox"
+                checked={settings.shotClock}
+                onChange={(e) => setSettings({ ...settings, shotClock: e.target.checked })}
+              />
+              Pakai shot clock 24/14
+            </label>
             {hasGroups && (
               <label className="check-field">
                 <input

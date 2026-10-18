@@ -220,21 +220,23 @@ export function DisplayPage() {
             {formatClock(clockMs)}
           </div>
 
-          <div className={`shot-module ${shotLow ? 'low' : ''}`}>
-            <div
-              className="shot-ring"
-              style={{
-                background: `conic-gradient(${
-                  shotLow ? '#ff5a5a' : '#f26b12'
-                } ${shotPct}%, rgba(255,255,255,0.08) 0)`,
-              }}
-            >
-              <div className="shot-core">
-                <small>SHOT</small>
-                <strong>{formatShotClock(shotClockMs)}</strong>
+          {config.shotClockEnabled !== false && (
+            <div className={`shot-module ${shotLow ? 'low' : ''}`}>
+              <div
+                className="shot-ring"
+                style={{
+                  background: `conic-gradient(${
+                    shotLow ? '#ff5a5a' : '#f26b12'
+                  } ${shotPct}%, rgba(255,255,255,0.08) 0)`,
+                }}
+              >
+                <div className="shot-core">
+                  <small>SHOT</small>
+                  <strong>{formatShotClock(shotClockMs)}</strong>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           <table className="period-board">
             <thead>

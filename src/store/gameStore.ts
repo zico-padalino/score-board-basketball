@@ -92,6 +92,7 @@ interface GameActions {
   setShotClockMs: (ms: number) => void
   resetShotClock: (ms?: number) => void
   setPossession: (team: TeamId) => void
+  setShotClockEnabled: (enabled: boolean) => void
   nextPeriod: () => void
   prevPeriod: () => void
   recordScore: (teamId: TeamId, points: 1 | 2 | 3, playerId?: string | null) => void
@@ -255,10 +256,13 @@ export const useGameStore = create<Store>()(
         if (!state.clockRunning) {
           return { gameExpired: false, shotExpired: false }
         }
+        const shotOn = state.config.shotClockEnabled !== false
         const clockMs = Math.max(0, state.clockMs - deltaMs)
-        const shotClockMs = Math.max(0, state.shotClockMs - deltaMs)
+        const shotClockMs = shotOn
+          ? Math.max(0, state.shotClockMs - deltaMs)
+          : state.shotClockMs
         const gameExpired = state.clockMs > 0 && clockMs === 0
-        const shotExpired = state.shotClockMs > 0 && shotClockMs === 0
+        const shotExpired = shotOn && state.shotClockMs > 0 && shotClockMs === 0
         const stop = gameExpired || shotExpired
         set({
           clockMs,
@@ -274,6 +278,14 @@ export const useGameStore = create<Store>()(
       resetShotClock: (ms) =>
         set({ shotClockMs: ms ?? get().config.shotClockMs }),
       setPossession: (team) => set({ possession: team }),
+
+      setShotClockEnabled: (enabled) => {
+        const { config } = get()
+        set({
+          config: { ...config, shotClockEnabled: enabled },
+          shotClockMs: config.shotClockMs,
+        })
+      },
 
       nextPeriod: () => {
         const state = get()

@@ -34,6 +34,7 @@ export function OperatorPage() {
   const awayScore = teamScore(state.scoreEvents, 'away')
   const homeFouls = teamFoulsInPeriod(state, 'home', state.period)
   const awayFouls = teamFoulsInPeriod(state, 'away', state.period)
+  const shotOn = state.config.shotClockEnabled !== false
   const shotLow = state.shotClockMs <= 5000
   const clockLow = state.clockMs <= 10000
 
@@ -83,6 +84,7 @@ export function OperatorPage() {
   }, [toast])
 
   const [savingResult, setSavingResult] = useState(false)
+  const [adjustOpen, setAdjustOpen] = useState(false)
 
   const finish = async () => {
     const match = state.match
@@ -153,12 +155,13 @@ export function OperatorPage() {
         toggleClock()
         return
       }
-      if (e.key === '4') {
+      const shotOn = s.config.shotClockEnabled !== false
+      if (e.key === '4' && shotOn) {
         s.resetShotClock()
         showToast('Shot clock 24')
         return
       }
-      if (e.key === '5') {
+      if (e.key === '5' && shotOn) {
         s.resetShotClock(14_000)
         showToast('Shot clock 14')
         return
@@ -473,7 +476,7 @@ export function OperatorPage() {
       )}
 
       <div className="operator">
-        <header className="op-toolbar">
+        <header className={`op-toolbar ${adjustOpen ? 'adjust-open' : ''} ${shotOn ? '' : 'no-shot'}`}>
           <div className="op-toolbar-left">
             <span className={`tag ${state.status === 'live' ? 'live' : 'ready'}`}>
               {state.status}
@@ -492,64 +495,93 @@ export function OperatorPage() {
             >
               {formatClock(state.clockMs)}
             </button>
-            <div className={`op-shot ${shotLow ? 'low' : ''}`}>
-              <span>SHOT</span>
-              <strong>{formatShotClock(state.shotClockMs)}</strong>
-            </div>
+            {shotOn && (
+              <div className={`op-shot ${shotLow ? 'low' : ''}`}>
+                <span>SHOT</span>
+                <strong>{formatShotClock(state.shotClockMs)}</strong>
+              </div>
+            )}
           </div>
 
           <div className="op-toolbar-actions">
             <button
               type="button"
-              className={`btn btn-sm ${state.clockRunning ? 'btn-danger' : 'btn-primary'}`}
+              className={`btn btn-sm op-start ${state.clockRunning ? 'btn-danger' : 'btn-primary'}`}
               onClick={toggleClock}
             >
               {state.clockRunning ? 'Pause' : 'Start'}
             </button>
             <button
               type="button"
-              className="btn btn-sm btn-navy"
+              className={`btn btn-sm op-shot-toggle ${shotOn ? 'on' : 'off'}`}
+              aria-pressed={shotOn}
+              title="Aktifkan / matikan shot clock 24 & 14"
               onClick={() => {
-                state.resetShotClock()
-                showToast('Shot 24')
+                state.setShotClockEnabled(!shotOn)
+                showToast(shotOn ? 'Shot clock dimatikan' : 'Shot clock aktif', shotOn ? 'warn' : 'ok')
               }}
             >
-              24
+              Shot {shotOn ? 'ON' : 'OFF'}
+            </button>
+            {shotOn && (
+              <>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-navy"
+                  onClick={() => {
+                    state.resetShotClock()
+                    showToast('Shot 24')
+                  }}
+                >
+                  24
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-navy"
+                  onClick={() => {
+                    state.resetShotClock(14_000)
+                    showToast('Shot 14')
+                  }}
+                >
+                  14
+                </button>
+              </>
+            )}
+            <button
+              type="button"
+              className={`btn btn-sm btn-ghost op-adjust-toggle ${adjustOpen ? 'open' : ''}`}
+              aria-expanded={adjustOpen}
+              title="Ganti babak & koreksi jam"
+              onClick={() => setAdjustOpen((v) => !v)}
+            >
+              {adjustOpen ? '✕' : '⋯'}
             </button>
             <button
               type="button"
-              className="btn btn-sm btn-navy"
-              onClick={() => {
-                state.resetShotClock(14_000)
-                showToast('Shot 14')
-              }}
-            >
-              14
-            </button>
-            <button
-              type="button"
-              className="btn btn-sm btn-ghost"
+              className="btn btn-sm btn-ghost op-secondary"
+              title="Babak sebelumnya"
               onClick={state.prevPeriod}
             >
-              ←
+              ← Babak
             </button>
             <button
               type="button"
-              className="btn btn-sm btn-ghost"
+              className="btn btn-sm btn-ghost op-secondary"
+              title="Babak berikutnya"
               onClick={state.nextPeriod}
             >
-              →
+              Babak →
             </button>
             <button
               type="button"
-              className="btn btn-sm btn-ghost"
+              className="btn btn-sm btn-ghost op-secondary"
               onClick={() => state.setClockMs(state.clockMs + 1000)}
             >
               +1s
             </button>
             <button
               type="button"
-              className="btn btn-sm btn-ghost"
+              className="btn btn-sm btn-ghost op-secondary"
               onClick={() => state.setClockMs(Math.max(0, state.clockMs - 1000))}
             >
               −1s

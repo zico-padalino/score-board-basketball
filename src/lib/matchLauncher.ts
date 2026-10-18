@@ -55,6 +55,7 @@ export async function openMatchInScoreboard(
     awayPlayers: rosterFor(away, 'away'),
     config: {
       periods: settings.periods,
+      shotClockEnabled: settings.shotClock,
       periodLengthMs: settings.periodMinutes * 60 * 1000,
     },
     match: link,

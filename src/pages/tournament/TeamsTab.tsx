@@ -327,6 +327,14 @@ export function TeamsTab({
               onChange={(e) => setDraftSettings({ ...draftSettings, periodMinutes: Number(e.target.value) || 10 })}
             />
           </div>
+          <label className="check-field">
+            <input
+              type="checkbox"
+              checked={draftSettings.shotClock}
+              onChange={(e) => setDraftSettings({ ...draftSettings, shotClock: e.target.checked })}
+            />
+            Pakai shot clock 24/14
+          </label>
           {hasGroups && (
             <label className="check-field">
               <input

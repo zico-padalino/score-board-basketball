@@ -89,6 +89,8 @@ export interface GameConfig {
   periods: number
   periodLengthMs: number
   otLengthMs: number
+  /** Shot clock 24/14 aktif; kalau false tidak berjalan & tidak berbunyi. */
+  shotClockEnabled: boolean
   shotClockMs: number
   maxPersonalFouls: number
   timeoutsPerTeam: number
@@ -123,6 +125,7 @@ export const DEFAULT_CONFIG: GameConfig = {
   periods: 4,
   periodLengthMs: 10 * 60 * 1000,
   otLengthMs: 5 * 60 * 1000,
+  shotClockEnabled: true,
   shotClockMs: 24 * 1000,
   maxPersonalFouls: 5,
   timeoutsPerTeam: 5,

@@ -11,6 +11,8 @@ export interface TournamentSettings {
   /** Jumlah babak per laga (4 kuarter, 2 babak, dst). */
   periods: number
   periodMinutes: number
+  /** Pakai shot clock 24/14 saat laga dibuka. */
+  shotClock: boolean
   /** Perkiraan lama satu laga di dunia nyata (termasuk jeda kuarter & jam berhenti). */
   matchMinutes?: number
   /** Jeda antara selesai satu laga dan mulai laga berikutnya. */
@@ -104,6 +106,7 @@ export const DEFAULT_TOURNAMENT_SETTINGS: TournamentSettings = {
   doubleRoundRobin: false,
   periods: 4,
   periodMinutes: 10,
+  shotClock: true,
 }
 
 export const PERIOD_OPTIONS = [

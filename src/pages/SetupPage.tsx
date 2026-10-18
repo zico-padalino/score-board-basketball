@@ -53,6 +53,7 @@ export function SetupPage() {
   const [awayLogo, setAwayLogo] = useState(DUMMY_AWAY)
   const [periodMinutes, setPeriodMinutes] = useState(10)
   const [periods, setPeriods] = useState(4)
+  const [shotClock, setShotClock] = useState(true)
   const [homePlayers, setHomePlayers] = useState(() => blankRoster('home'))
   const [awayPlayers, setAwayPlayers] = useState(() => blankRoster('away'))
   const [shuffleNames, setShuffleNames] = useState('')
@@ -106,6 +107,7 @@ export function SetupPage() {
       awayPlayers,
       config: {
         periods,
+        shotClockEnabled: shotClock,
         periodLengthMs: periodMinutes * 60 * 1000,
       },
     })
@@ -379,8 +381,15 @@ export function SetupPage() {
             />
           </div>
           <div className="field">
-            <label>Shot clock</label>
-            <input value="24 detik" disabled />
+            <label htmlFor="shotClockMode">Shot clock</label>
+            <select
+              id="shotClockMode"
+              value={shotClock ? 'on' : 'off'}
+              onChange={(e) => setShotClock(e.target.value === 'on')}
+            >
+              <option value="on">Aktif (24 / 14 detik)</option>
+              <option value="off">Tidak pakai shot clock</option>
+            </select>
           </div>
           <div className="field">
             <label>Foul limit</label>
