@@ -8,7 +8,14 @@ import { courtLabel, gameId } from '../lib/gameRoom'
 import { finalizeMatch } from '../lib/tournamentApi'
 import { useGameStore } from '../store/gameStore'
 import type { Player, TeamId } from '../types/game'
-import { formatClock, formatShotClock, periodLabel, periodsOf } from '../utils/format'
+import {
+  formatClock,
+  formatClockInput,
+  formatShotClock,
+  parseClockInput,
+  periodLabel,
+  periodsOf,
+} from '../utils/format'
 import { teamFoulsInPeriod, teamScore } from '../utils/stats'
 
 type Toast = { id: number; text: string; tone: 'ok' | 'warn' | 'err' }
@@ -388,6 +395,36 @@ export function OperatorPage() {
     setSelected(null)
   }
 
+  const editClock = () => {
+    const s = useGameStore.getState()
+    const input = window.prompt(
+      'Waktu pertandingan (contoh 5:30, 0:45, atau 12.5 detik):',
+      formatClockInput(s.clockMs),
+    )
+    if (input === null) return
+    const ms = parseClockInput(input)
+    if (ms === null) {
+      showToast('Format waktu salah. Contoh: 5:30 atau 45', 'err')
+      return
+    }
+    const max = 99 * 60_000 + 59_000
+    s.setClockMs(Math.min(ms, max))
+    showToast(`Waktu jadi ${formatClock(Math.min(ms, max))}`)
+  }
+
+  const editShotClock = () => {
+    const s = useGameStore.getState()
+    const input = window.prompt('Shot clock (detik, contoh 24 atau 8.5):', formatClockInput(s.shotClockMs))
+    if (input === null) return
+    const ms = parseClockInput(input)
+    if (ms === null || ms > 99_000) {
+      showToast('Shot clock harus 0–99 detik', 'err')
+      return
+    }
+    s.setShotClockMs(ms)
+    showToast(`Shot clock jadi ${formatShotClock(ms)}`)
+  }
+
   const editScore = (teamId: TeamId) => {
     const team = teamId === 'home' ? state.home : state.away
     const current = teamId === 'home' ? homeScore : awayScore
@@ -751,6 +788,24 @@ export function OperatorPage() {
             >
               −1s
             </button>
+            <button
+              type="button"
+              className="btn btn-sm btn-ghost op-secondary op-edit-clock"
+              title="Ketik waktu pertandingan"
+              onClick={editClock}
+            >
+              Edit waktu
+            </button>
+            {shotOn && (
+              <button
+                type="button"
+                className="btn btn-sm btn-ghost op-secondary op-edit-shot"
+                title="Ketik shot clock"
+                onClick={editShotClock}
+              >
+                Edit shot
+              </button>
+            )}
             <button
               type="button"
               className={`btn btn-sm btn-ghost op-secondary op-sound ${soundOn ? 'on' : ''}`}

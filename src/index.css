@@ -2120,7 +2120,8 @@ button {
   }
 
   .op-toolbar.no-shot .op-sound,
-  .op-toolbar.no-shot .op-reset {
+  .op-toolbar.no-shot .op-reset,
+  .op-toolbar.no-shot .op-edit-clock {
     grid-column: span 2;
   }
 
