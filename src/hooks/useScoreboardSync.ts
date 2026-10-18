@@ -4,7 +4,7 @@ import { useGameStore } from '../store/gameStore'
 import type { GameState } from '../types/game'
 import { supabase } from '../lib/supabase'
 import { gameId, joinedFromLink } from '../lib/gameRoom'
-import { teamScore } from '../utils/stats'
+import { saveMatchProgress } from '../lib/tournamentApi'
 
 const CHANNEL = 'courtside-state-v1'
 const TABLE = 'games'
@@ -99,18 +99,9 @@ export function flushGameSave() {
 
 function saveMatch(state: GameState) {
   if (!supabase || !state.match || state.status === 'setup') return
-  supabase
-    .from('matches')
-    .update({
-      status: state.status === 'finished' ? 'finished' : 'live',
-      home_score: teamScore(state.scoreEvents, 'home'),
-      away_score: teamScore(state.scoreEvents, 'away'),
-      game_state: snapshot(state),
-    })
-    .eq('id', state.match.id)
-    .then(({ error }) => {
-      if (error) console.warn('Gagal menyimpan skor laga:', error.message)
-    })
+  saveMatchProgress(state.match.id, snapshot(state)).catch((e: Error) =>
+    console.warn('Gagal menyimpan skor laga:', e.message),
+  )
 }
 
 /**

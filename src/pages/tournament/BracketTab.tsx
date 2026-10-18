@@ -1,3 +1,4 @@
+import { LiveClock } from '../../components/LiveClock'
 import { TeamLogo } from '../../components/TeamLogo'
 import { matchWinner } from '../../lib/tournament'
 import type { Match, TournamentTeam } from '../../types/tournament'
@@ -10,7 +11,7 @@ export function BracketTab({
 }: {
   matches: Match[]
   teamById: Map<string, TournamentTeam>
-  onOpen: (match: Match) => void
+  onOpen?: (match: Match) => void
 }) {
   const knockout = matches.filter((m) => m.stage === 'knockout')
   if (knockout.length === 0) {
@@ -77,15 +78,20 @@ export function BracketTab({
                       key={m.id}
                       type="button"
                       className={`bk-match status-${m.status}`}
-                      disabled={!ready}
-                      onClick={() => onOpen(m)}
-                      title={ready ? 'Buka di scoreboard' : undefined}
+                      disabled={!ready || !onOpen}
+                      onClick={() => onOpen?.(m)}
+                      title={ready && onOpen ? 'Buka di scoreboard' : undefined}
                     >
                       <span className="bk-when">
                         {m.scheduled_at
                           ? `${formatDay(m.scheduled_at).split(',')[0]} · ${formatTime(m.scheduled_at)}`
                           : 'Belum dijadwalkan'}
-                        {m.status === 'live' && <em> · LIVE</em>}
+                        {m.status === 'live' && (
+                          <em>
+                            {' '}
+                            · LIVE <LiveClock match={m} />
+                          </em>
+                        )}
                       </span>
                       {slot(m, 'home')}
                       {slot(m, 'away')}

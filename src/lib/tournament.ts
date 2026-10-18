@@ -12,7 +12,10 @@ import {
 } from '../types/tournament'
 import { uid } from '../utils/format'
 
-export type MatchDraft = Omit<Match, 'game_state'>
+export type MatchDraft = Omit<
+  Match,
+  'period' | 'clock_ms' | 'shot_clock_ms' | 'clock_running' | 'live_at' | 'period_scores'
+>
 
 export function resolveSettings(
   settings: Partial<TournamentSettings> | undefined,

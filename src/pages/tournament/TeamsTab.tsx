@@ -137,7 +137,7 @@ export function TeamsTab({
     if (!window.confirm(`Hapus turnamen "${tournament.name}" beserta semua tim dan jadwalnya?`)) return
     void run(async () => {
       await deleteTournament(tournament.id)
-      navigate('/turnamen')
+      navigate('/admin/turnamen')
     })
   }
 

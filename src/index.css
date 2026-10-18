@@ -3462,6 +3462,109 @@ button {
   letter-spacing: 0.04em;
 }
 
+.mr-score {
+  flex-wrap: wrap;
+}
+
+.live-clock {
+  flex-basis: 100%;
+  display: inline-flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 0.35rem;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--danger);
+  font-variant-numeric: tabular-nums;
+}
+
+.live-clock b {
+  font-size: 0.72rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 6px;
+  background: rgba(193, 18, 31, 0.1);
+}
+
+.live-clock:not(.running) {
+  color: var(--ink-soft);
+}
+
+.bk-when .live-clock {
+  flex-basis: auto;
+  font-size: 0.7rem;
+}
+
+.live-panel {
+  border-color: rgba(193, 18, 31, 0.3);
+}
+
+.result-card table {
+  margin-bottom: 0.25rem;
+}
+
+.result-meta {
+  margin: 0 0 0.45rem;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.result-card tr.winner-row td {
+  font-weight: 800;
+  color: var(--orange-deep);
+}
+
+.nav-logout {
+  padding: 0.5rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--danger);
+  background: rgba(193, 18, 31, 0.08);
+}
+
+.public-shell .brand {
+  color: inherit;
+}
+
+.login-page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+}
+
+.login-card {
+  width: min(420px, 100%);
+  display: grid;
+  gap: 0.25rem;
+}
+
+.login-card .brand {
+  margin-bottom: 1rem;
+}
+
+.login-back {
+  margin-top: 0.75rem;
+  text-align: center;
+  font-weight: 700;
+}
+
+.link-btn {
+  color: inherit;
+  text-decoration: underline;
+  font-weight: 800;
+}
+
+@media print {
+  .public-shell .topnav {
+    display: none;
+  }
+
+  .result-card {
+    break-inside: avoid;
+  }
+}
+
 .op-match-banner {
   display: flex;
   flex-wrap: wrap;

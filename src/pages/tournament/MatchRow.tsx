@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { LiveClock } from '../../components/LiveClock'
 import { TeamLogo } from '../../components/TeamLogo'
-import { updateMatch } from '../../lib/tournamentApi'
+import { resetMatch, updateMatch } from '../../lib/tournamentApi'
 import type { Match, TournamentTeam } from '../../types/tournament'
 import { formatTime, fromLocalInput, toLocalInput } from '../../utils/datetime'
 
@@ -108,6 +109,7 @@ export function MatchRow({
           ) : (
             <i>vs</i>
           )}
+          {match.status === 'live' && <LiveClock match={match} />}
         </div>
         <TeamSide
           team={away}
@@ -190,7 +192,14 @@ export function MatchRow({
                 disabled={busy}
                 onClick={() => {
                   if (!window.confirm('Reset hasil laga ini? Skor dan statistik laga akan dihapus.')) return
-                  void save({ status: 'scheduled', home_score: 0, away_score: 0, game_state: null })
+                  setBusy(true)
+                  resetMatch(match.id)
+                    .then(() => {
+                      setEditing(false)
+                      onChanged()
+                    })
+                    .catch((e: Error) => window.alert(e.message))
+                    .finally(() => setBusy(false))
                 }}
               >
                 Reset hasil

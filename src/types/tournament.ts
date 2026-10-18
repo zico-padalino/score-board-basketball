@@ -47,7 +47,36 @@ export interface Match {
   status: MatchStatus
   home_score: number
   away_score: number
-  game_state: GameState | null
+  period: number
+  clock_ms: number
+  shot_clock_ms: number
+  clock_running: boolean
+  live_at: string | null
+  period_scores: PeriodScores
+}
+
+export interface PeriodScores {
+  home?: number[]
+  away?: number[]
+}
+
+/** Kolom live yang ditulis scoreboard ke baris laga. */
+export type MatchLive = Pick<
+  Match,
+  | 'status'
+  | 'home_score'
+  | 'away_score'
+  | 'period'
+  | 'clock_ms'
+  | 'shot_clock_ms'
+  | 'clock_running'
+  | 'live_at'
+  | 'period_scores'
+>
+
+export interface MatchStateRow {
+  match_id: string
+  state: GameState
 }
 
 export interface StandingRow {

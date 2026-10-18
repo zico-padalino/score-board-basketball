@@ -6,6 +6,7 @@ import type {
   TournamentSettings,
   TournamentTeam,
 } from '../types/tournament'
+import { liveFromState } from './matchLive'
 import { supabase } from './supabase'
 import { matchWinner, type MatchDraft } from './tournament'
 
@@ -111,37 +112,71 @@ export async function deleteStageMatches(tournamentId: string, stage: Match['sta
   )
 }
 
+export async function getMatchState(matchId: string): Promise<GameState | null> {
+  const row = unwrap(
+    await db().from('match_states').select('state').eq('match_id', matchId).maybeSingle(),
+  ) as { state: GameState } | null
+  return row?.state ?? null
+}
+
+export async function saveMatchProgress(matchId: string, state: GameState) {
+  const live = liveFromState(state)
+  const [a, b] = await Promise.all([
+    db().from('matches').update(live).eq('id', matchId),
+    db()
+      .from('match_states')
+      .upsert({ match_id: matchId, state, updated_at: live.live_at }),
+  ])
+  unwrap(a)
+  unwrap(b)
+  return live
+}
+
+export async function resetMatch(matchId: string) {
+  await updateMatch(matchId, {
+    status: 'scheduled',
+    home_score: 0,
+    away_score: 0,
+    period: 1,
+    clock_ms: 0,
+    shot_clock_ms: 0,
+    clock_running: false,
+    live_at: null,
+    period_scores: {},
+  })
+  unwrap(await db().from('match_states').delete().eq('match_id', matchId))
+}
+
 /** Simpan hasil akhir; di babak gugur pemenang otomatis masuk laga berikutnya. */
-export async function finalizeMatch(
-  matchId: string,
-  homeScore: number,
-  awayScore: number,
-  gameState: GameState,
-) {
+export async function finalizeMatch(matchId: string, gameState: GameState) {
   const match = await getMatch(matchId)
   if (!match) throw new Error('Laga tidak ditemukan')
-  await updateMatch(matchId, {
-    status: 'finished',
-    home_score: homeScore,
-    away_score: awayScore,
-    game_state: gameState,
-  })
-  const winner = matchWinner({ ...match, home_score: homeScore, away_score: awayScore })
+  const live = await saveMatchProgress(matchId, { ...gameState, status: 'finished' })
+  const winner = matchWinner({ ...match, home_score: live.home_score, away_score: live.away_score })
   if (match.stage === 'knockout' && match.next_match_id && match.next_slot && winner) {
     await updateMatch(match.next_match_id, { [`${match.next_slot}_team_id`]: winner })
   }
 }
 
-/** Panggil `onChange` setiap ada perubahan laga/tim turnamen ini. */
-export function subscribeTournament(tournamentId: string, onChange: () => void) {
+/**
+ * Ikuti perubahan laga turnamen ini. UPDATE dikirim sebagai baris baru;
+ * INSERT/DELETE memanggil `onChange()` tanpa argumen supaya daftar dimuat ulang.
+ */
+export function subscribeTournament(
+  tournamentId: string,
+  onChange: (updated?: Match) => void,
+) {
   if (!supabase) return () => undefined
   const client = supabase
   const channel = client
-    .channel(`tournament:${tournamentId}`)
+    .channel(`tournament:${tournamentId}:${crypto.randomUUID()}`)
     .on(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'matches', filter: `tournament_id=eq.${tournamentId}` },
-      onChange,
+      (payload) => {
+        if (payload.eventType === 'UPDATE') onChange(payload.new as Match)
+        else onChange()
+      },
     )
     .subscribe()
   return () => {

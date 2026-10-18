@@ -3,7 +3,7 @@ import { useGameStore } from '../store/gameStore'
 import type { Player } from '../types/game'
 import type { Match, Tournament, TournamentTeam } from '../types/tournament'
 import { blankRoster, resolveSettings } from './tournament'
-import { getMatch } from './tournamentApi'
+import { getMatchState } from './tournamentApi'
 import { uid } from '../utils/format'
 
 function rosterFor(team: TournamentTeam, prefix: string): Player[] {
@@ -30,14 +30,13 @@ export async function openMatchInScoreboard(
   tournament: Tournament,
 ) {
   flushGameSave()
-  const latest = await getMatch(match.id)
+  const saved = await getMatchState(match.id)
   const link = {
     id: match.id,
     tournamentId: tournament.id,
     label: `${tournament.name} · ${match.round_label}`,
   }
 
-  const saved = latest?.game_state
   if (saved?.home && saved?.away) {
     useGameStore.setState({ ...saved, match: link })
     return

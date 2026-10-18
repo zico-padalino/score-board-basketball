@@ -30,7 +30,7 @@ export function TournamentsPage() {
     setError(null)
     try {
       const t = await createTournament({ name: name.trim(), format, settings })
-      navigate(`/turnamen/${t.id}?tab=tim`)
+      navigate(`/admin/turnamen/${t.id}?tab=tim`)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal membuat turnamen')
       setBusy(false)
@@ -75,7 +75,7 @@ export function TournamentsPage() {
           <ul className="tour-list">
             {items?.map((t) => (
               <li key={t.id}>
-                <Link to={`/turnamen/${t.id}`}>
+                <Link to={`/admin/turnamen/${t.id}`}>
                   <strong>{t.name}</strong>
                   <span className="tag">{FORMAT_LABELS[t.format]}</span>
                   <span className="muted">

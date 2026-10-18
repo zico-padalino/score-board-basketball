@@ -32,5 +32,5 @@ export function displayUrl() {
 }
 
 export function operatorUrl() {
-  return `${window.location.origin}/operator?game=${gameId}`
+  return `${window.location.origin}/admin/operator?game=${gameId}`
 }

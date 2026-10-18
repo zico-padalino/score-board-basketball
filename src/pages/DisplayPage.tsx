@@ -136,7 +136,7 @@ export function DisplayPage() {
       </div>
 
       <div className="display-controls no-print">
-        <Link to="/operator" className="display-back">
+        <Link to="/admin/operator" className="display-back">
           ← Operator
         </Link>
         <button

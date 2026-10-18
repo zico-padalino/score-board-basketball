@@ -1,15 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useTournamentData } from '../hooks/useTournamentData'
 import { hasUnfinishedOtherGame, openMatchInScoreboard } from '../lib/matchLauncher'
 import { supabase } from '../lib/supabase'
-import {
-  getTournament,
-  listMatches,
-  listTeams,
-  subscribeTournament,
-} from '../lib/tournamentApi'
 import { useGameStore } from '../store/gameStore'
-import type { Match, Tournament, TournamentTeam } from '../types/tournament'
+import type { Match } from '../types/tournament'
 import { FORMAT_LABELS } from '../types/tournament'
 import { BracketTab } from './tournament/BracketTab'
 import { ScheduleTab } from './tournament/ScheduleTab'
@@ -22,38 +17,8 @@ export function TournamentPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
-  const [tournament, setTournament] = useState<Tournament | null | undefined>(undefined)
-  const [teams, setTeams] = useState<TournamentTeam[]>([])
-  const [matches, setMatches] = useState<Match[]>([])
-  const [error, setError] = useState<string | null>(null)
+  const { tournament, teams, matches, teamById, error, setError, reload } = useTournamentData(id)
   const [opening, setOpening] = useState<string | null>(null)
-
-  const reload = useCallback(async () => {
-    try {
-      const [t, tm, ms] = await Promise.all([getTournament(id), listTeams(id), listMatches(id)])
-      setTournament(t)
-      setTeams(tm)
-      setMatches(ms)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Gagal memuat turnamen')
-    }
-  }, [id])
-
-  useEffect(() => {
-    if (!supabase) return
-    void reload()
-    const unsub = subscribeTournament(id, () => {
-      void listMatches(id).then(setMatches)
-    })
-    const onFocus = () => void reload()
-    window.addEventListener('focus', onFocus)
-    return () => {
-      unsub()
-      window.removeEventListener('focus', onFocus)
-    }
-  }, [id, reload])
-
-  const teamById = useMemo(() => new Map(teams.map((t) => [t.id, t])), [teams])
 
   if (!supabase) {
     return (
@@ -78,7 +43,7 @@ export function TournamentPage() {
       <main className="page">
         <section className="panel">
           <p className="muted">Turnamen tidak ditemukan.</p>
-          <Link className="btn btn-navy" to="/turnamen">
+          <Link className="btn btn-navy" to="/admin/turnamen">
             Kembali
           </Link>
         </section>
@@ -110,7 +75,7 @@ export function TournamentPage() {
     setOpening(match.id)
     try {
       await openMatchInScoreboard(match, home, away, tournament)
-      navigate('/operator')
+      navigate('/admin/operator')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal membuka game')
       setOpening(null)
@@ -124,7 +89,7 @@ export function TournamentPage() {
     <main className="page wide">
       <section className="setup-hero tour-hero">
         <div>
-          <Link to="/turnamen" className="muted">
+          <Link to="/admin/turnamen" className="muted">
             ← Semua turnamen
           </Link>
           <h2>{tournament.name}</h2>

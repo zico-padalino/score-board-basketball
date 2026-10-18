@@ -1,35 +1,56 @@
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { Navigate, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useGameClock } from '../hooks/useGameClock'
 import { useScoreboardSync } from '../hooks/useScoreboardSync'
+import { signOut, useAuth } from '../lib/auth'
+import { supabase } from '../lib/supabase'
+import { gameId } from '../lib/gameRoom'
 
 const links = [
-  { to: '/turnamen', label: 'Turnamen', short: 'Liga' },
-  { to: '/', label: 'Setup', short: 'Setup', end: true },
-  { to: '/operator', label: 'Operator', short: 'Ops' },
-  { to: '/display', label: 'Layar', short: 'Layar' },
-  { to: '/scoresheet', label: 'Scoresheet', short: 'Sheet' },
-  { to: '/boxscore', label: 'Box Score', short: 'Box' },
+  { to: '/admin/turnamen', label: 'Turnamen', short: 'Liga' },
+  { to: '/admin', label: 'Setup', short: 'Setup', end: true },
+  { to: '/admin/operator', label: 'Operator', short: 'Ops' },
+  { to: `/display?game=${gameId}`, label: 'Layar', short: 'Layar' },
+  { to: '/admin/scoresheet', label: 'Scoresheet', short: 'Sheet' },
+  { to: '/admin/boxscore', label: 'Box Score', short: 'Box' },
 ]
 
+/** Halaman admin: wajib login dengan email yang terdaftar di tabel `admins`. */
 export function Layout() {
+  const auth = useAuth()
   const location = useLocation()
-  const isDisplay = location.pathname === '/display'
 
-  useGameClock(!isDisplay)
-  useScoreboardSync(isDisplay ? 'receive' : 'broadcast')
+  if (!supabase) return <AdminShell />
 
-  if (isDisplay) {
-    return <Outlet />
+  if (auth.loading) {
+    return (
+      <main className="page">
+        <p className="muted">Memeriksa login…</p>
+      </main>
+    )
   }
 
+  if (!auth.isAdmin) {
+    const next = encodeURIComponent(location.pathname + location.search)
+    return <Navigate to={`/login?next=${next}`} replace />
+  }
+
+  return <AdminShell email={auth.session?.user.email} />
+}
+
+function AdminShell({ email }: { email?: string }) {
+  const location = useLocation()
+
+  useGameClock(true)
+  useScoreboardSync('broadcast')
+
   return (
-    <div className={`app-shell route-${location.pathname.split('/')[1] || 'setup'}`}>
+    <div className={`app-shell route-${location.pathname.split('/')[2] || 'setup'}`}>
       <header className="topnav">
         <div className="brand">
           <div className="brand-mark" aria-hidden />
           <div>
             <h1>COURTSIDE</h1>
-            <span>Basketball Scoreboard</span>
+            <span>Admin{email ? ` · ${email}` : ''}</span>
           </div>
         </div>
         <nav className="nav-links desktop-nav" aria-label="Menu utama">
@@ -38,12 +59,19 @@ export function Layout() {
               key={link.to}
               to={link.to}
               end={link.end}
+              target={link.short === 'Layar' ? '_blank' : undefined}
               className={({ isActive }) => (isActive ? 'active' : undefined)}
             >
               {link.label}
             </NavLink>
           ))}
+          <NavLink to="/">Publik</NavLink>
         </nav>
+        {supabase && (
+          <button type="button" className="nav-logout" onClick={() => void signOut()}>
+            Keluar
+          </button>
+        )}
       </header>
 
       <div className="app-content">
@@ -56,13 +84,9 @@ export function Layout() {
             key={link.to}
             to={link.to}
             end={link.end}
+            target={link.short === 'Layar' ? '_blank' : undefined}
             className={({ isActive }) =>
-              [
-                isActive ? 'active' : '',
-                `bn-${link.short.toLowerCase()}`,
-              ]
-                .filter(Boolean)
-                .join(' ')
+              [isActive ? 'active' : '', `bn-${link.short.toLowerCase()}`].filter(Boolean).join(' ')
             }
           >
             <span className="bn-icon" aria-hidden />

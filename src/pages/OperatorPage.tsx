@@ -102,7 +102,7 @@ export function OperatorPage() {
     state.finishGame()
     setSavingResult(true)
     try {
-      await finalizeMatch(match.id, homeScore, awayScore, snapshot(useGameStore.getState()))
+      await finalizeMatch(match.id, snapshot(useGameStore.getState()))
       showToast('Hasil tersimpan ke jadwal', 'ok')
     } catch {
       showToast('Gagal menyimpan hasil — cek koneksi', 'err')
@@ -453,7 +453,7 @@ export function OperatorPage() {
             <strong>Laga turnamen</strong> {state.match.label}
           </span>
           <div className="btn-row">
-            <Link className="btn btn-sm btn-ghost" to={`/turnamen/${state.match.tournamentId}`}>
+            <Link className="btn btn-sm btn-ghost" to={`/admin/turnamen/${state.match.tournamentId}`}>
               Jadwal
             </Link>
             {state.status === 'finished' ? (
@@ -565,10 +565,10 @@ export function OperatorPage() {
             >
               Layar
             </Link>
-            <Link className="btn btn-sm btn-ghost" to="/scoresheet">
+            <Link className="btn btn-sm btn-ghost" to="/admin/scoresheet">
               Sheet
             </Link>
-            <Link className="btn btn-sm btn-ghost" to="/boxscore">
+            <Link className="btn btn-sm btn-ghost" to="/admin/boxscore">
               Box
             </Link>
           </div>

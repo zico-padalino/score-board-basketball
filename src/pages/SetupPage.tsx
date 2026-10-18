@@ -104,7 +104,7 @@ export function SetupPage() {
         periodLengthMs: periodMinutes * 60 * 1000,
       },
     })
-    navigate('/operator')
+    navigate('/admin/operator')
   }
 
   const renderLogoField = (
