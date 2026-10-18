@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useTournamentData } from '../../hooks/useTournamentData'
-import { matchMinutesOf, resolveSettings } from '../../lib/tournament'
+import { matchMinutesOf, matchWinner, resolveSettings } from '../../lib/tournament'
+import { TeamLogo } from '../../components/TeamLogo'
 import type { Match } from '../../types/tournament'
 import { FORMAT_LABELS } from '../../types/tournament'
 import { dayKey, formatDay } from '../../utils/datetime'
@@ -71,6 +72,11 @@ export function PublicTournamentPage() {
   const requested = params.get('tab') as Tab | null
   const tab: Tab = tabs.some((t) => t.id === requested) ? (requested as Tab) : 'jadwal'
   const live = matches.filter((m) => m.status === 'live')
+  const final = matches.find(
+    (m) => m.stage === 'knockout' && m.status === 'finished' && /^final$/i.test(m.round_label.trim()),
+  )
+  const championId = final ? matchWinner(final) : null
+  const champion = championId ? teamById.get(championId) : undefined
   const matchMinutes = matchMinutesOf(resolveSettings(tournament.settings))
 
   return (
@@ -93,6 +99,22 @@ export function PublicTournamentPage() {
           </p>
         </div>
       </section>
+
+      {champion && final && (
+        <section className="panel champion-banner" style={{ ['--team-color' as string]: champion.color }}>
+          <span className="champion-label">🏆 Juara</span>
+          <TeamLogo
+            team={{ name: champion.name, color: champion.color, logo: champion.logo, shortName: champion.short_name }}
+            size="lg"
+          />
+          <div>
+            <strong>{champion.name}</strong>
+            <span className="muted">
+              Final {final.home_score}–{final.away_score}
+            </span>
+          </div>
+        </section>
+      )}
 
       <div className="seg-tabs main no-print">
         {tabs.map((t) => (

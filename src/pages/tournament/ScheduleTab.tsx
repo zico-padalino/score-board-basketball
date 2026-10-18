@@ -25,6 +25,7 @@ import type { Match, Tournament, TournamentTeam } from '../../types/tournament'
 import { PERIOD_OPTIONS } from '../../types/tournament'
 import { dayKey, formatDay, toLocalInput } from '../../utils/datetime'
 import { useUnassignedPoints } from '../../hooks/useUnassignedPoints'
+import { AddMatchPanel } from './AddMatchPanel'
 import { MatchRow } from './MatchRow'
 
 type Filter = 'all' | 'group' | 'knockout'
@@ -418,6 +419,17 @@ export function ScheduleTab({
           Tanggal, lapangan, dan tim tiap laga bisa diubah lewat tombol Edit.
         </p>
       </details>
+
+      {matches.length > 0 && (
+        <AddMatchPanel
+          tournamentId={tournament.id}
+          teams={teams}
+          matches={matches}
+          matchMinutes={matchMinutesOf(settings)}
+          breakMinutes={settings.breakMinutes ?? 15}
+          onAdded={reload}
+        />
+      )}
 
       {tournament.format === 'group_knockout' && (
         <div className="seg-tabs">
