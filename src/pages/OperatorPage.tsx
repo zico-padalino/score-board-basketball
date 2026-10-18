@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { TeamLogo } from '../components/TeamLogo'
+import { gameId } from '../lib/gameRoom'
 import { useGameStore } from '../store/gameStore'
 import type { Player, TeamId } from '../types/game'
 import { formatClock, formatShotClock, periodLabel } from '../utils/format'
@@ -500,7 +501,12 @@ export function OperatorPage() {
           </div>
 
           <div className="op-toolbar-links">
-            <Link className="btn btn-sm btn-navy" to="/display" target="_blank">
+            <Link
+              className="btn btn-sm btn-navy"
+              to={`/display?game=${gameId}`}
+              target="_blank"
+              title={`Kode game ${gameId}`}
+            >
               Layar
             </Link>
             <Link className="btn btn-sm btn-ghost" to="/scoresheet">

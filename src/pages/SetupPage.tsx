@@ -1,6 +1,8 @@
 import { useRef, useState, type RefObject } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { TeamLogo } from '../components/TeamLogo'
+import { displayUrl, gameId } from '../lib/gameRoom'
+import { supabase, uploadLogo } from '../lib/supabase'
 import { useGameStore } from '../store/gameStore'
 import type { Player } from '../types/game'
 import { uid } from '../utils/format'
@@ -17,16 +19,17 @@ function blankRoster(prefix: string): Player[] {
   }))
 }
 
+function validateLogoFile(file: File) {
+  if (!file.type.startsWith('image/')) {
+    throw new Error('File harus berupa gambar')
+  }
+  if (file.size > 1.5 * 1024 * 1024) {
+    throw new Error('Ukuran logo maks 1.5 MB')
+  }
+}
+
 function readLogoFile(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
-    if (!file.type.startsWith('image/')) {
-      reject(new Error('File harus berupa gambar'))
-      return
-    }
-    if (file.size > 1.5 * 1024 * 1024) {
-      reject(new Error('Ukuran logo maks 1.5 MB'))
-      return
-    }
     const reader = new FileReader()
     reader.onload = () => resolve(String(reader.result))
     reader.onerror = () => reject(new Error('Gagal membaca file'))
@@ -50,6 +53,9 @@ export function SetupPage() {
   const [homePlayers, setHomePlayers] = useState(() => blankRoster('home'))
   const [awayPlayers, setAwayPlayers] = useState(() => blankRoster('away'))
   const [logoError, setLogoError] = useState<string | null>(null)
+  const [logoUploading, setLogoUploading] = useState<'home' | 'away' | null>(
+    null,
+  )
 
   const homeFileRef = useRef<HTMLInputElement>(null)
   const awayFileRef = useRef<HTMLInputElement>(null)
@@ -69,12 +75,18 @@ export function SetupPage() {
   ) => {
     if (!file) return
     try {
-      const dataUrl = await readLogoFile(file)
+      validateLogoFile(file)
+      setLogoUploading(side)
+      const logo = supabase
+        ? await uploadLogo(file, gameId)
+        : await readLogoFile(file)
       setLogoError(null)
-      if (side === 'home') setHomeLogo(dataUrl)
-      else setAwayLogo(dataUrl)
+      if (side === 'home') setHomeLogo(logo)
+      else setAwayLogo(logo)
     } catch (err) {
       setLogoError(err instanceof Error ? err.message : 'Gagal upload logo')
+    } finally {
+      setLogoUploading(null)
     }
   }
 
@@ -114,9 +126,10 @@ export function SetupPage() {
           <button
             type="button"
             className="btn btn-sm btn-navy"
+            disabled={logoUploading !== null}
             onClick={() => fileRef.current?.click()}
           >
-            Upload logo
+            {logoUploading === side ? 'Mengupload…' : 'Upload logo'}
           </button>
           <button
             type="button"
@@ -329,11 +342,19 @@ export function SetupPage() {
           <button
             className="btn btn-navy"
             type="button"
-            onClick={() => navigate('/display')}
+            onClick={() => navigate(`/display?game=${gameId}`)}
           >
             Buka Layar Penonton
           </button>
         </div>
+        {supabase && (
+          <p className="muted" style={{ marginTop: '0.75rem' }}>
+            Kode game: <strong>{gameId}</strong> · Layar di perangkat lain:{' '}
+            <a href={displayUrl()} target="_blank" rel="noreferrer">
+              {displayUrl()}
+            </a>
+          </p>
+        )}
       </section>
     </main>
   )
