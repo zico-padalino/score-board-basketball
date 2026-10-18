@@ -704,6 +704,11 @@ button {
   color: #f5fafc;
 }
 
+.op-toolbar .btn-ghost.op-reset {
+  color: #ffb4b4;
+  box-shadow: inset 0 0 0 1px rgba(255, 107, 107, 0.35);
+}
+
 .op-toolbar .tag {
   background: rgba(255, 255, 255, 0.12);
   color: #f5fafc;
@@ -1971,8 +1976,8 @@ button {
     display: inline-flex;
   }
 
-  .op-toolbar.adjust-open:not(.no-shot) .op-secondary:nth-child(6) {
-    grid-column: 1 / span 2;
+  .op-toolbar.no-shot .op-reset {
+    grid-column: 1 / -1;
   }
 
   /* Toast di atas dock supaya tidak menutupi jam */

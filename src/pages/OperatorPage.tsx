@@ -589,6 +589,20 @@ export function OperatorPage() {
             >
               −1s
             </button>
+            <button
+              type="button"
+              className="btn btn-sm btn-ghost op-secondary op-reset"
+              title="Ulang laga dari 0–0 dengan tim yang sama"
+              onClick={() => {
+                const label = `${state.home.name} vs ${state.away.name}`
+                if (!window.confirm(`Reset skor ${label} ke 0–0?\nJam, foul, timeout, dan statistik pemain ikut diulang.`)) return
+                state.restartGame()
+                setAdjustOpen(false)
+                showToast('Skor direset ke 0–0', 'warn')
+              }}
+            >
+              Reset skor
+            </button>
           </div>
 
           <div className="op-toolbar-links">

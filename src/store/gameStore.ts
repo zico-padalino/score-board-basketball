@@ -72,6 +72,8 @@ function createInitialState(partial?: Partial<GameState>): GameState {
 
 interface GameActions {
   resetGame: () => void
+  /** Ulang laga yang sama dari 0–0 (tim, roster, pengaturan & tautan laga tetap). */
+  restartGame: () => void
   setupTeams: (payload: {
     homeName: string
     awayName: string
@@ -178,6 +180,25 @@ export const useGameStore = create<Store>()(
       ...createInitialState(),
 
       resetGame: () => set(createInitialState()),
+
+      restartGame: () => {
+        const s = get()
+        const players = [...s.home.players, ...s.away.players]
+        set({
+          status: 'ready',
+          period: 1,
+          clockMs: s.config.periodLengthMs,
+          shotClockMs: s.config.shotClockMs,
+          clockRunning: false,
+          possession: 'home',
+          home: { ...s.home, timeoutsUsed: 0, periodFouls: {} },
+          away: { ...s.away, timeoutsUsed: 0, periodFouls: {} },
+          scoreEvents: [],
+          events: [],
+          playerStats: initStats(players),
+          createdAt: Date.now(),
+        })
+      },
 
       setupTeams: (payload) => {
         const config = { ...DEFAULT_CONFIG, ...payload.config }

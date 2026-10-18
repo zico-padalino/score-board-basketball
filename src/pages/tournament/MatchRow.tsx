@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { LiveClock } from '../../components/LiveClock'
 import { TeamLogo } from '../../components/TeamLogo'
 import { deleteMatch, resetMatch, updateMatch } from '../../lib/tournamentApi'
+import { flushGameSave } from '../../hooks/useScoreboardSync'
 import { useGameStore } from '../../store/gameStore'
 import type { Match, TournamentTeam } from '../../types/tournament'
 import { formatTimeRange, fromLocalInput, toLocalInput } from '../../utils/datetime'
@@ -196,6 +197,11 @@ export function MatchRow({
                 onClick={() => {
                   if (!window.confirm('Reset hasil laga ini? Skor dan statistik laga akan dihapus.')) return
                   setBusy(true)
+                  const store = useGameStore.getState()
+                  if (store.match?.id === match.id) {
+                    store.resetGame()
+                    flushGameSave()
+                  }
                   resetMatch(match.id)
                     .then(() => {
                       setEditing(false)
