@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { TeamLogo } from '../components/TeamLogo'
 import { displayUrl, gameId } from '../lib/gameRoom'
 import { supabase, uploadLogo } from '../lib/supabase'
+import { countLines, shufflePlayersIntoTeams } from '../lib/tournament'
 import { useGameStore } from '../store/gameStore'
 import type { Player } from '../types/game'
 import { PERIOD_OPTIONS } from '../types/tournament'
@@ -54,6 +55,7 @@ export function SetupPage() {
   const [periods, setPeriods] = useState(4)
   const [homePlayers, setHomePlayers] = useState(() => blankRoster('home'))
   const [awayPlayers, setAwayPlayers] = useState(() => blankRoster('away'))
+  const [shuffleNames, setShuffleNames] = useState('')
   const [logoError, setLogoError] = useState<string | null>(null)
   const [logoUploading, setLogoUploading] = useState<'home' | 'away' | null>(
     null,
@@ -194,6 +196,39 @@ export function SetupPage() {
       </section>
 
       {logoError && <p className="logo-error">{logoError}</p>}
+
+      <details className="panel shuffle-panel" style={{ marginBottom: '1rem' }}>
+        <summary>
+          <h3>Acak pemain Home vs Away</h3>
+        </summary>
+        <div className="field">
+          <label htmlFor="setupShuffle">
+            Nama pemain (satu per baris) · {countLines(shuffleNames)} pemain
+          </label>
+          <textarea
+            id="setupShuffle"
+            rows={8}
+            value={shuffleNames}
+            placeholder={'Zico\nAndi\nBudi\nRizky\n...'}
+            onChange={(e) => setShuffleNames(e.target.value)}
+          />
+        </div>
+        <button
+          type="button"
+          className="btn btn-primary"
+          disabled={countLines(shuffleNames) < 2}
+          onClick={() => {
+            const [home, away] = shufflePlayersIntoTeams(shuffleNames, 2)
+            setHomePlayers(home)
+            setAwayPlayers(away)
+          }}
+        >
+          Acak ke Home & Away
+        </button>
+        <span className="muted" style={{ marginLeft: '0.75rem' }}>
+          Klik lagi untuk mengacak ulang. Hasilnya langsung mengisi roster di bawah.
+        </span>
+      </details>
 
       <div className="grid-2">
         <section className="panel">

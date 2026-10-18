@@ -18,6 +18,7 @@ import {
 } from '../../lib/tournamentApi'
 import type { Match, Tournament, TournamentSettings, TournamentTeam } from '../../types/tournament'
 import { PERIOD_OPTIONS } from '../../types/tournament'
+import { ShufflePlayersPanel } from './ShufflePlayersPanel'
 
 const COLORS = ['#e85d04', '#1d3557', '#2a9d8f', '#c1121f', '#6a4c93', '#f4a261', '#264653', '#8ac926']
 
@@ -258,6 +259,15 @@ export function TeamsTab({
           </ul>
         </section>
       </div>
+
+      <ShufflePlayersPanel
+        tournament={tournament}
+        teams={teams}
+        matches={matches}
+        groupCount={settings.groupCount}
+        hasGroups={hasGroups}
+        reload={reload}
+      />
 
       <section className="panel">
         <h3>Pengaturan turnamen</h3>

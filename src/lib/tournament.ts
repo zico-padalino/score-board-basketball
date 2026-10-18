@@ -55,6 +55,25 @@ export function parseRoster(text: string): Player[] {
     })
 }
 
+/**
+ * Acak daftar pemain (satu per baris) lalu bagi rata ke `teamCount` tim.
+ * Baris "4 Budi" mempertahankan nomor punggung; tanpa nomor diberi urutan.
+ */
+export function shufflePlayersIntoTeams(text: string, teamCount: number): Player[][] {
+  const lines = text
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean)
+  const count = Math.max(1, teamCount)
+  const buckets: string[][] = Array.from({ length: count }, () => [])
+  shuffle(lines).forEach((line, i) => buckets[i % count].push(line))
+  return buckets.map((lines) => parseRoster(lines.join('\n')))
+}
+
+export function countLines(text: string): number {
+  return text.split('\n').filter((l) => l.trim()).length
+}
+
 export function rosterToText(players: Player[]): string {
   return players.map((p) => `${p.number} ${p.name}`).join('\n')
 }
