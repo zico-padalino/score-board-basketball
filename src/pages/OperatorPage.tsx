@@ -87,6 +87,10 @@ export function OperatorPage() {
 
   const [savingResult, setSavingResult] = useState(false)
   const [adjustOpen, setAdjustOpen] = useState(false)
+  const [scorePicker, setScorePicker] = useState<{
+    teamId: TeamId
+    points: 1 | 2 | 3 | -1
+  } | null>(null)
   const soundOn = useCountdownSoundEnabled()
 
   const finish = async () => {
@@ -330,6 +334,29 @@ export function OperatorPage() {
     )
   }
 
+  /** Skor dari kartu tim: masuk ke pemain terpilih, atau tanya siapa pencetaknya. */
+  const teamScoreAction = (teamId: TeamId, points: 1 | 2 | 3 | -1) => {
+    if (selected?.teamId === teamId) {
+      applyTeamScore(teamId, points, selected.playerId)
+      return
+    }
+    setScorePicker({ teamId, points })
+  }
+
+  const applyTeamScore = (teamId: TeamId, points: 1 | 2 | 3 | -1, playerId: string | null) => {
+    const team = teamId === 'home' ? state.home : state.away
+    const player = playerId ? team.players.find((p) => p.id === playerId) : null
+    const who = player ? `#${player.number} ${player.name}` : team.shortName
+    if (points === -1) {
+      state.correctScore(teamId, -1, playerId)
+      showToast(`${who} −1`, 'warn')
+    } else {
+      state.recordScore(teamId, points, playerId)
+      showToast(`${who} +${points}${points === 1 ? ' FT' : ''}`)
+    }
+    setScorePicker(null)
+  }
+
   const editScore = (teamId: TeamId) => {
     const team = teamId === 'home' ? state.home : state.away
     const current = teamId === 'home' ? homeScore : awayScore
@@ -420,20 +447,14 @@ export function OperatorPage() {
           <button
             type="button"
             className="btn btn-sm btn-ghost"
-            onClick={() => {
-              state.recordScore(teamId, 2, null)
-              showToast(`${team.shortName} +2`)
-            }}
+            onClick={() => teamScoreAction(teamId, 2)}
           >
             +2
           </button>
           <button
             type="button"
             className="btn btn-sm btn-ghost"
-            onClick={() => {
-              state.recordScore(teamId, 3, null)
-              showToast(`${team.shortName} +3`)
-            }}
+            onClick={() => teamScoreAction(teamId, 3)}
           >
             +3
           </button>
@@ -441,22 +462,16 @@ export function OperatorPage() {
             type="button"
             className="btn btn-sm btn-ghost op-minus"
             disabled={scoreVal <= 0}
-            title="Kurangi 1 poin (koreksi skor tim)"
-            onClick={() => {
-              state.correctScore(teamId, -1)
-              showToast(`${team.shortName} −1`, 'warn')
-            }}
+            title="Kurangi 1 poin dari pemain / tim"
+            onClick={() => teamScoreAction(teamId, -1)}
           >
             −1
           </button>
           <button
             type="button"
             className="btn btn-sm btn-ghost"
-            title="Tambah 1 poin (koreksi skor tim)"
-            onClick={() => {
-              state.correctScore(teamId, 1)
-              showToast(`${team.shortName} +1`)
-            }}
+            title="+1 lemparan bebas"
+            onClick={() => teamScoreAction(teamId, 1)}
           >
             +1
           </button>
@@ -504,6 +519,62 @@ export function OperatorPage() {
           {toast.text}
         </div>
       )}
+
+      {scorePicker && (() => {
+        const team = scorePicker.teamId === 'home' ? state.home : state.away
+        const minus = scorePicker.points === -1
+        const ordered = [...team.players].sort((a, b) => Number(b.active) - Number(a.active))
+        return (
+          <div className="score-picker-backdrop" onClick={() => setScorePicker(null)}>
+            <div
+              className="score-picker"
+              role="dialog"
+              aria-label="Pilih pencetak poin"
+              style={{ ['--team-color' as string]: team.color }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <header>
+                <strong>
+                  {minus ? 'Kurangi 1 poin dari' : `Siapa yang mencetak +${scorePicker.points}?`}
+                </strong>
+                <span>{team.name}</span>
+              </header>
+              <div className="score-picker-grid">
+                {ordered.map((p) => {
+                  const pts = state.playerStats[p.id]?.pts ?? 0
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      className={`score-picker-player ${p.active ? 'on-court' : 'bench'}`}
+                      disabled={minus && pts <= 0}
+                      onClick={() => applyTeamScore(scorePicker.teamId, scorePicker.points, p.id)}
+                    >
+                      <b>{p.number}</b>
+                      <span>{p.name}</span>
+                      <small>
+                        {pts} pts{p.active ? '' : ' · bench'}
+                      </small>
+                    </button>
+                  )
+                })}
+              </div>
+              <div className="score-picker-actions">
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => applyTeamScore(scorePicker.teamId, scorePicker.points, null)}
+                >
+                  {minus ? 'Koreksi skor tim saja' : 'Tanpa pemain (skor tim)'}
+                </button>
+                <button type="button" className="btn btn-ghost" onClick={() => setScorePicker(null)}>
+                  Batal
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {state.match && (
         <div className="op-match-banner">

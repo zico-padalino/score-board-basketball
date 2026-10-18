@@ -6,13 +6,18 @@ export function BoxScoreTable({
   team,
   playerStats,
   showOnCourt = true,
+  teamScore,
 }: {
   team: Pick<Team, 'id' | 'name' | 'color' | 'players'>
   playerStats: Record<string, PlayerStats>
   showOnCourt?: boolean
+  /** Skor tim di papan; selisih dengan poin pemain ditampilkan sebagai "Poin tim". */
+  teamScore?: number
 }) {
   const rows = team.players.map((p) => ({ player: p, s: playerStats[p.id] ?? emptyStats(p.id) }))
   const totals = totalsFromPlayers(rows.map((r) => r.s))
+  const teamOnly = teamScore === undefined ? 0 : teamScore - totals.pts
+  const totalPts = teamScore ?? totals.pts
 
   return (
     <div>
@@ -75,10 +80,22 @@ export function BoxScoreTable({
                 <td className={s.pf >= 5 ? 'fouled-out' : undefined}>{s.pf}</td>
               </tr>
             ))}
+            {teamOnly !== 0 && (
+              <tr className="team-points">
+                <td />
+                <td className="name" title="Poin tanpa pemain (skor tim / koreksi)">
+                  Poin tim
+                </td>
+                <td>
+                  <strong>{teamOnly > 0 ? `+${teamOnly}` : teamOnly}</strong>
+                </td>
+                <td colSpan={17} />
+              </tr>
+            )}
             <tr className="totals">
               <td />
               <td className="name">TOTAL</td>
-              <td>{totals.pts}</td>
+              <td>{totalPts}</td>
               <td>{totals.fgm}</td>
               <td>{totals.fga}</td>
               <td>{fgPct(totals.fgm, totals.fga)}</td>

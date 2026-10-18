@@ -123,7 +123,7 @@ interface GameActions {
   undoLastEvent: () => void
   finishGame: () => void
   /** Koreksi skor tim (+/−) tanpa mengubah statistik pemain; skor tidak bisa di bawah 0. */
-  correctScore: (teamId: TeamId, delta: number) => void
+  correctScore: (teamId: TeamId, delta: number, playerId?: string | null) => void
   /** Ubah skor tim langsung ke angka tertentu (lewat koreksi). */
   setTeamScore: (teamId: TeamId, value: number) => void
 }
@@ -569,7 +569,11 @@ export const useGameStore = create<Store>()(
         if (state.scoreEvents.length === 0) return
         const last = state.scoreEvents[state.scoreEvents.length - 1]
         let playerStats = state.playerStats
-        if (last.playerId && playerStats[last.playerId]) {
+        if (last.kind === 'adj' && last.playerId && playerStats[last.playerId]) {
+          const s = { ...playerStats[last.playerId] }
+          s.pts = Math.max(0, s.pts - last.points)
+          playerStats = { ...playerStats, [last.playerId]: s }
+        } else if (last.playerId && playerStats[last.playerId]) {
           const s = { ...playerStats[last.playerId] }
           s.pts = Math.max(0, s.pts - last.points)
           if (last.points === 1) {
@@ -609,20 +613,29 @@ export const useGameStore = create<Store>()(
       finishGame: () =>
         set({ status: 'finished', clockRunning: false }),
 
-      correctScore: (teamId, delta) => {
+      correctScore: (teamId, delta, playerId = null) => {
         const state = get()
         const current = state.scoreEvents
           .filter((e) => e.teamId === teamId)
           .reduce((sum, e) => sum + e.points, 0)
-        const points = Math.max(-current, Math.round(delta))
+        let points = Math.max(-current, Math.round(delta))
+        let playerStats = state.playerStats
+        if (playerId) {
+          const next = ensureStats(playerStats, playerId)
+          const s = { ...next[playerId] }
+          points = Math.max(-s.pts, points)
+          s.pts += points
+          playerStats = { ...next, [playerId]: s }
+        }
         if (points === 0) return
         set({
+          playerStats,
           scoreEvents: [
             ...state.scoreEvents,
             {
               id: uid('adj'),
               teamId,
-              playerId: null,
+              playerId,
               points,
               period: state.period,
               clockMs: state.clockMs,

@@ -5,7 +5,7 @@ import { getMatchState, listMatchStates } from '../../lib/tournamentApi'
 import type { GameState, PlayerStats } from '../../types/game'
 import type { Match, TournamentTeam } from '../../types/tournament'
 import { formatDay, formatTime } from '../../utils/datetime'
-import { emptyStats, getReb } from '../../utils/stats'
+import { emptyStats, getReb, teamScore } from '../../utils/stats'
 
 type SortKey = 'pts' | 'ppg' | 'reb' | 'ast' | 'stl' | 'blk' | 'tpm'
 
@@ -213,11 +213,13 @@ export function BoxScoreTab({
             team={{ ...state.home, name: home?.name ?? state.home.name, color: home?.color ?? state.home.color }}
             playerStats={state.playerStats}
             showOnCourt={selected?.status === 'live'}
+            teamScore={teamScore(state.scoreEvents, 'home')}
           />
           <BoxScoreTable
             team={{ ...state.away, name: away?.name ?? state.away.name, color: away?.color ?? state.away.color }}
             playerStats={state.playerStats}
             showOnCourt={selected?.status === 'live'}
+            teamScore={teamScore(state.scoreEvents, 'away')}
           />
           {selected?.status === 'live' && <p className="muted">* = sedang di lapangan</p>}
         </div>

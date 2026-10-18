@@ -4073,6 +4073,12 @@ button {
   margin-top: 0.25rem;
 }
 
+.box-score tr.team-points td {
+  font-style: italic;
+  color: var(--ink-soft);
+  background: rgba(15, 41, 61, 0.03);
+}
+
 .box-score td.fouled-out {
   color: var(--danger);
   font-weight: 800;
@@ -4105,6 +4111,112 @@ button {
   .bs-team.away {
     flex-direction: column-reverse;
   }
+}
+
+.score-picker-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(7, 26, 40, 0.55);
+  backdrop-filter: blur(3px);
+}
+
+.score-picker {
+  width: min(520px, 100%);
+  max-height: min(86dvh, 640px);
+  overflow: auto;
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 18px;
+  background: var(--panel);
+  border-top: 5px solid var(--team-color, var(--orange));
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+
+.score-picker header {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.score-picker header strong {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+}
+
+.score-picker header span {
+  font-weight: 800;
+  color: var(--team-color, var(--ink-soft));
+}
+
+.score-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.45rem;
+}
+
+.score-picker-player {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 0.5rem;
+  align-items: center;
+  min-height: 58px;
+  padding: 0.45rem 0.55rem;
+  border-radius: 12px;
+  text-align: left;
+  background: #fff;
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.score-picker-player b {
+  grid-row: 1 / span 2;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 400;
+  background: color-mix(in srgb, var(--team-color, var(--navy)) 18%, white);
+}
+
+.score-picker-player span {
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.score-picker-player small {
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+}
+
+.score-picker-player.on-court {
+  border-color: color-mix(in srgb, var(--team-color, var(--navy)) 45%, white);
+}
+
+.score-picker-player.bench {
+  opacity: 0.75;
+}
+
+.score-picker-player:disabled {
+  opacity: 0.35;
+}
+
+.score-picker-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: space-between;
 }
 
 .timing-warn {

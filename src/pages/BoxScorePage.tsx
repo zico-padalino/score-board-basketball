@@ -1,5 +1,6 @@
 import { BoxScoreTable } from '../components/BoxScoreTable'
 import { useGameStore } from '../store/gameStore'
+import { teamScore } from '../utils/stats'
 
 export function BoxScorePage() {
   const state = useGameStore()
@@ -16,8 +17,16 @@ export function BoxScorePage() {
         </button>
         <span className="muted">* = pemain di lapangan</span>
       </div>
-      <BoxScoreTable team={state.home} playerStats={state.playerStats} />
-      <BoxScoreTable team={state.away} playerStats={state.playerStats} />
+      <BoxScoreTable
+        team={state.home}
+        playerStats={state.playerStats}
+        teamScore={teamScore(state.scoreEvents, 'home')}
+      />
+      <BoxScoreTable
+        team={state.away}
+        playerStats={state.playerStats}
+        teamScore={teamScore(state.scoreEvents, 'away')}
+      />
     </main>
   )
 }
