@@ -140,6 +140,7 @@ export function DisplayPage() {
           style={{ background: away.color }}
         />
         <div className="display-wood" />
+        <img className="display-watermark" src="/halcion-logo.png" alt="" draggable={false} />
         <div className="display-vignette" />
         <div className="display-scan" />
       </div>
