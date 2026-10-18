@@ -1141,6 +1141,47 @@ export function OperatorPage() {
               </div>
             </div>
 
+            <div className="console-group points-group">
+              <div className="group-label">Poin pemain</div>
+              <div className="points-board">
+                {(['home', 'away'] as const).map((side) => {
+                  const team = state[side]
+                  const total = side === 'home' ? homeScore : awayScore
+                  const rows = team.players
+                    .map((p) => ({ p, pts: state.playerStats[p.id]?.pts ?? 0, pf: state.playerStats[p.id]?.pf ?? 0 }))
+                    .filter((r) => r.pts > 0)
+                    .sort((a, b) => b.pts - a.pts || Number(a.p.number) - Number(b.p.number))
+                  const teamOnly = total - rows.reduce((s, r) => s + r.pts, 0)
+                  return (
+                    <div key={side} className="points-team" style={{ ['--team-color' as string]: team.color }}>
+                      <header>
+                        <strong>{team.name}</strong>
+                        <b>{total}</b>
+                      </header>
+                      {rows.length === 0 && teamOnly === 0 && <p className="muted">Belum ada poin</p>}
+                      <ul>
+                        {rows.map(({ p, pts, pf }) => (
+                          <li key={p.id}>
+                            <span className="pt-num">#{p.number}</span>
+                            <span className="pt-name">{p.name}</span>
+                            {pf > 0 && <span className="pt-pf">{pf}F</span>}
+                            <strong>{pts}</strong>
+                          </li>
+                        ))}
+                        {teamOnly !== 0 && (
+                          <li className="pt-team-only" title="Poin tanpa pemain (skor tim / koreksi)">
+                            <span className="pt-num">—</span>
+                            <span className="pt-name">Poin tim</span>
+                            <strong>{teamOnly}</strong>
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
             <div className="console-group recent-group">
               <div className="group-label">Play terakhir</div>
               <ul className="recent-list">
@@ -1150,13 +1191,17 @@ export function OperatorPage() {
                 {recent.map((e) => {
                   const p = findPlayer(e.teamId, e.playerId)
                   const team = e.teamId === 'home' ? state.home : state.away
+                  const isScore = e.type === 'fg2_made' || e.type === 'fg3_made' || e.type === 'ft_made'
                   return (
                     <li key={e.id}>
                       <span className="recent-tag">{eventLabel(e.type)}</span>
-                      <span>
-                        {team.shortName}
-                        {p ? ` #${p.number}` : ''}
+                      <span className="recent-who">
+                        <b style={{ color: team.color }}>{team.name}</b>
+                        {p ? ` · #${p.number} ${p.name}` : isScore ? ' · tanpa pemain' : ''}
                       </span>
+                      {p && isScore && (
+                        <span className="recent-pts">{state.playerStats[p.id]?.pts ?? 0} pts</span>
+                      )}
                       <span className="muted">{periodLabel(e.period, periodsOf(state.config))}</span>
                     </li>
                   )
