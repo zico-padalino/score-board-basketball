@@ -3,6 +3,7 @@ import { useGameClock } from '../hooks/useGameClock'
 import { useScoreboardSync } from '../hooks/useScoreboardSync'
 
 const links = [
+  { to: '/turnamen', label: 'Turnamen', short: 'Liga' },
   { to: '/', label: 'Setup', short: 'Setup', end: true },
   { to: '/operator', label: 'Operator', short: 'Ops' },
   { to: '/display', label: 'Layar', short: 'Layar' },
@@ -22,7 +23,7 @@ export function Layout() {
   }
 
   return (
-    <div className={`app-shell route-${location.pathname.replace('/', '') || 'setup'}`}>
+    <div className={`app-shell route-${location.pathname.split('/')[1] || 'setup'}`}>
       <header className="topnav">
         <div className="brand">
           <div className="brand-mark" aria-hidden />

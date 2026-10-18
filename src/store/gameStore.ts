@@ -4,6 +4,7 @@ import type {
   GameConfig,
   GameEvent,
   GameState,
+  MatchLink,
   Period,
   Player,
   ScoreEvent,
@@ -34,6 +35,7 @@ function createInitialState(partial?: Partial<GameState>): GameState {
   const awayPlayers = makePlayers('away')
   return {
     status: 'setup',
+    match: null,
     config: { ...DEFAULT_CONFIG },
     home: {
       id: 'home',
@@ -80,6 +82,7 @@ interface GameActions {
     homePlayers: Player[]
     awayPlayers: Player[]
     config?: Partial<GameConfig>
+    match?: MatchLink | null
   }) => void
   startGame: () => void
   toggleClock: () => void
@@ -181,6 +184,7 @@ export const useGameStore = create<Store>()(
         const awayPlayers = payload.awayPlayers
         set({
           status: 'ready',
+          match: payload.match ?? null,
           config,
           home: {
             id: 'home',
@@ -588,6 +592,7 @@ export const useGameStore = create<Store>()(
         return {
           ...current,
           ...p,
+          match: p.match ?? null,
           home: {
             ...current.home,
             ...p.home,

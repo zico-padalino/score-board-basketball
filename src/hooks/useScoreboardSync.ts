@@ -4,6 +4,7 @@ import { useGameStore } from '../store/gameStore'
 import type { GameState } from '../types/game'
 import { supabase } from '../lib/supabase'
 import { gameId, joinedFromLink } from '../lib/gameRoom'
+import { teamScore } from '../utils/stats'
 
 const CHANNEL = 'courtside-state-v1'
 const TABLE = 'games'
@@ -40,9 +41,10 @@ function pick(state: GameState): SyncPayload {
   }
 }
 
-function snapshot(state: GameState): GameState {
+export function snapshot(state: GameState): GameState {
   return {
     ...pick(state),
+    match: state.match,
     events: state.events,
     playerStats: state.playerStats,
     createdAt: state.createdAt,
@@ -88,6 +90,28 @@ async function fetchRemoteState(): Promise<GameState | null> {
 }
 
 let joinHandled = !joinedFromLink
+let flushPending: (() => void) | null = null
+
+/** Simpan state sekarang ke Supabase tanpa menunggu jeda (mis. sebelum ganti laga). */
+export function flushGameSave() {
+  flushPending?.()
+}
+
+function saveMatch(state: GameState) {
+  if (!supabase || !state.match || state.status === 'setup') return
+  supabase
+    .from('matches')
+    .update({
+      status: state.status === 'finished' ? 'finished' : 'live',
+      home_score: teamScore(state.scoreEvents, 'home'),
+      away_score: teamScore(state.scoreEvents, 'away'),
+      game_state: snapshot(state),
+    })
+    .eq('id', state.match.id)
+    .then(({ error }) => {
+      if (error) console.warn('Gagal menyimpan skor laga:', error.message)
+    })
+}
 
 /**
  * Sinkron layar penonton dengan operator: antar tab via BroadcastChannel,
@@ -172,17 +196,20 @@ function broadcast(bc: BroadcastChannel | null, channel?: RealtimeChannel) {
     window.clearTimeout(saveTimer)
     saveTimer = undefined
     if (!supabase || !hydrated) return
+    const state = useGameStore.getState()
     supabase
       .from(TABLE)
       .upsert({
         id: gameId,
-        state: snapshot(useGameStore.getState()),
+        state: snapshot(state),
         updated_at: new Date().toISOString(),
       })
       .then(({ error }) => {
         if (error) console.warn('Gagal menyimpan game ke Supabase:', error.message)
       })
+    saveMatch(state)
   }
+  flushPending = save
 
   const scheduleSave = () => {
     if (supabase && saveTimer === undefined) {
@@ -240,6 +267,7 @@ function broadcast(bc: BroadcastChannel | null, channel?: RealtimeChannel) {
 
   return () => {
     disposed = true
+    if (flushPending === save) flushPending = null
     unsub()
     window.removeEventListener('pagehide', onHide)
     window.clearTimeout(remoteTimer)

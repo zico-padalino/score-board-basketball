@@ -93,8 +93,16 @@ export interface GameConfig {
   playersOnCourt: number
 }
 
+/** Laga turnamen yang sedang dimainkan di scoreboard. */
+export interface MatchLink {
+  id: string
+  tournamentId: string
+  label: string
+}
+
 export interface GameState {
   status: 'setup' | 'ready' | 'live' | 'paused' | 'finished'
+  match: MatchLink | null
   config: GameConfig
   home: Team
   away: Team

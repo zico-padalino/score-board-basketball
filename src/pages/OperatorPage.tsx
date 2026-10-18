@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { TeamLogo } from '../components/TeamLogo'
+import { snapshot } from '../hooks/useScoreboardSync'
 import { gameId } from '../lib/gameRoom'
+import { finalizeMatch } from '../lib/tournamentApi'
 import { useGameStore } from '../store/gameStore'
 import type { Player, TeamId } from '../types/game'
 import { formatClock, formatShotClock, periodLabel } from '../utils/format'
@@ -79,6 +81,35 @@ export function OperatorPage() {
     const t = window.setTimeout(() => setToast(null), 1800)
     return () => window.clearTimeout(t)
   }, [toast])
+
+  const [savingResult, setSavingResult] = useState(false)
+
+  const finish = async () => {
+    const match = state.match
+    if (!match) {
+      state.finishGame()
+      showToast('Game selesai', 'warn')
+      return
+    }
+    if (homeScore === awayScore) {
+      showToast('Skor imbang — lanjutkan overtime dulu', 'warn')
+      return
+    }
+    const ok = window.confirm(
+      `Akhiri laga dan simpan hasil?\n${state.home.name} ${homeScore} – ${awayScore} ${state.away.name}`,
+    )
+    if (!ok) return
+    state.finishGame()
+    setSavingResult(true)
+    try {
+      await finalizeMatch(match.id, homeScore, awayScore, snapshot(useGameStore.getState()))
+      showToast('Hasil tersimpan ke jadwal', 'ok')
+    } catch {
+      showToast('Gagal menyimpan hasil — cek koneksi', 'err')
+    } finally {
+      setSavingResult(false)
+    }
+  }
 
   const requirePlayer = () => {
     if (!selected) {
@@ -413,6 +444,31 @@ export function OperatorPage() {
       {toast && (
         <div className={`op-toast ${toast.tone}`} key={toast.id}>
           {toast.text}
+        </div>
+      )}
+
+      {state.match && (
+        <div className="op-match-banner">
+          <span>
+            <strong>Laga turnamen</strong> {state.match.label}
+          </span>
+          <div className="btn-row">
+            <Link className="btn btn-sm btn-ghost" to={`/turnamen/${state.match.tournamentId}`}>
+              Jadwal
+            </Link>
+            {state.status === 'finished' ? (
+              <span className="tag ready">Hasil tersimpan</span>
+            ) : (
+              <button
+                type="button"
+                className="btn btn-sm btn-success"
+                disabled={savingResult}
+                onClick={() => void finish()}
+              >
+                Akhiri & simpan hasil
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -891,10 +947,7 @@ export function OperatorPage() {
                 <button
                   className="btn btn-ghost"
                   type="button"
-                  onClick={() => {
-                    state.finishGame()
-                    showToast('Game selesai', 'warn')
-                  }}
+                  onClick={() => void finish()}
                 >
                   Akhiri
                 </button>

@@ -5,6 +5,8 @@ import { DisplayPage } from './pages/DisplayPage'
 import { OperatorPage } from './pages/OperatorPage'
 import { ScoresheetPage } from './pages/ScoresheetPage'
 import { SetupPage } from './pages/SetupPage'
+import { TournamentPage } from './pages/TournamentPage'
+import { TournamentsPage } from './pages/TournamentsPage'
 
 export default function App() {
   return (
@@ -16,6 +18,8 @@ export default function App() {
           <Route path="display" element={<DisplayPage />} />
           <Route path="scoresheet" element={<ScoresheetPage />} />
           <Route path="boxscore" element={<BoxScorePage />} />
+          <Route path="turnamen" element={<TournamentsPage />} />
+          <Route path="turnamen/:id" element={<TournamentPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
