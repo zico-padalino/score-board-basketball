@@ -5,6 +5,7 @@ import { useScoreboardSync } from '../hooks/useScoreboardSync'
 import { signOut, useAuth } from '../lib/auth'
 import { supabase } from '../lib/supabase'
 import { gameId } from '../lib/gameRoom'
+import { useBranding } from '../lib/branding'
 
 const links = [
   { to: '/admin/turnamen', label: 'Turnamen', short: 'Liga' },
@@ -39,6 +40,7 @@ export function Layout() {
 }
 
 function AdminShell({ email }: { email?: string }) {
+  const brand = useBranding()
   const location = useLocation()
 
   useGameClock(true)
@@ -49,9 +51,9 @@ function AdminShell({ email }: { email?: string }) {
     <div className={`app-shell route-${location.pathname.split('/')[2] || 'setup'}`}>
       <header className="topnav">
         <div className="brand">
-          <img className="brand-mark" src="/halcion-logo.png" alt="Halcion Community" />
+          <img className="brand-mark" src={brand.logo} alt={brand.name} />
           <div>
-            <h1>HALCION</h1>
+            <h1>{brand.name}</h1>
             <span>Admin{email ? ` · ${email}` : ''}</span>
           </div>
         </div>

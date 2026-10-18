@@ -14,9 +14,11 @@ import {
 } from '../utils/format'
 import { periodScore, teamFoulsInPeriod, teamScore } from '../utils/stats'
 import { unlockAudio } from '../utils/buzzer'
+import { useBranding } from '../lib/branding'
 
 
 export function DisplayPage() {
+  const brand = useBranding()
   const home = useGameStore((s) => s.home)
   const away = useGameStore((s) => s.away)
   const scoreEvents = useGameStore((s) => s.scoreEvents)
@@ -140,7 +142,7 @@ export function DisplayPage() {
           style={{ background: away.color }}
         />
         <div className="display-wood" />
-        <img className="display-watermark" src="/halcion-logo.png" alt="" draggable={false} />
+        <img className="display-watermark" src={brand.logo} alt="" draggable={false} />
         <div className="display-vignette" />
         <div className="display-scan" />
       </div>
@@ -169,9 +171,9 @@ export function DisplayPage() {
 
       <header className="display-top">
         <div className="display-brand">
-          <img className="brand-orb" src="/halcion-logo.png" alt="Halcion Community" />
+          <img className="brand-orb" src={brand.logo} alt={brand.name} />
           <div>
-            <strong>HALCION</strong>
+            <strong>{brand.name}</strong>
             <em>LIVE SCOREBOARD</em>
           </div>
         </div>
@@ -362,7 +364,7 @@ export function DisplayPage() {
           </div>
         ) : (
           <div className="ticker-track idle">
-            <span className="ticker-badge">HALCION</span>
+            <span className="ticker-badge">{brand.name}</span>
             <span>Siap untuk tip-off</span>
           </div>
         )}

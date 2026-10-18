@@ -1,5 +1,6 @@
 import { useRef, useState, type RefObject } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { BrandingPanel } from '../components/BrandingPanel'
 import { TeamLogo } from '../components/TeamLogo'
 import { COURTS, courtLabel, displayUrl, gameId, switchCourt } from '../lib/gameRoom'
 import { supabase, uploadLogo } from '../lib/supabase'
@@ -435,6 +436,8 @@ export function SetupPage() {
           </div>
         )}
       </section>
+
+      {supabase && <BrandingPanel />}
     </main>
   )
 }

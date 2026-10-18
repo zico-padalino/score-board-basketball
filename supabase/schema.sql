@@ -69,6 +69,13 @@ create table if not exists public.match_states (
   updated_at timestamptz not null default now()
 );
 
+-- Pengaturan aplikasi (logo & nama) yang bisa diganti admin
+create table if not exists public.app_settings (
+  id text primary key,
+  data jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
 create index if not exists tournament_teams_tournament_idx
   on public.tournament_teams (tournament_id);
 create index if not exists matches_tournament_idx
@@ -111,7 +118,7 @@ declare
   t text;
   p text;
 begin
-  foreach t in array array['games', 'tournaments', 'tournament_teams', 'matches', 'match_states'] loop
+  foreach t in array array['games', 'tournaments', 'tournament_teams', 'matches', 'match_states', 'app_settings'] loop
     execute format('alter table public.%I enable row level security', t);
     foreach p in array array['_all', '_select', '_insert', '_update', '_read', '_admin'] loop
       execute format('drop policy if exists %I on public.%I', t || p, t);

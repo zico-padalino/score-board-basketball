@@ -1,13 +1,15 @@
 import { Link, Outlet } from 'react-router-dom'
+import { useBranding } from '../lib/branding'
 
 export function PublicLayout() {
+  const brand = useBranding()
   return (
     <div className="app-shell public-shell">
       <header className="topnav">
         <Link to="/" className="brand">
-          <img className="brand-mark" src="/halcion-logo.png" alt="Halcion Community" />
+          <img className="brand-mark" src={brand.logo} alt={brand.name} />
           <div>
-            <h1>HALCION</h1>
+            <h1>{brand.name}</h1>
             <span>Basketball Community</span>
           </div>
         </Link>

@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { signIn, signOut, useAuth } from '../lib/auth'
+import { useBranding } from '../lib/branding'
 
 export function LoginPage() {
+  const brand = useBranding()
   const auth = useAuth()
   const navigate = useNavigate()
   const [params] = useSearchParams()
@@ -32,9 +34,9 @@ export function LoginPage() {
     <main className="page login-page">
       <form className="panel login-card" onSubmit={onSubmit}>
         <div className="brand">
-          <img className="brand-mark" src="/halcion-logo.png" alt="Halcion Community" />
+          <img className="brand-mark" src={brand.logo} alt={brand.name} />
           <div>
-            <h1>HALCION</h1>
+            <h1>{brand.name}</h1>
             <span>Login admin</span>
           </div>
         </div>
