@@ -4,9 +4,10 @@ const STORAGE_KEY = 'halcion-court'
 export const DEFAULT_COURT = 'LAPANGAN1'
 export const COURTS = ['LAPANGAN1', 'LAPANGAN2', 'LAPANGAN3']
 
+/** Hanya kode lapangan (LAPANGAN1, LAPANGAN2, ...) — kode acak versi lama diabaikan. */
 function normalize(code: string | null) {
   const clean = (code ?? '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '')
-  return clean.length >= 4 ? clean.slice(0, 12) : null
+  return /^LAPANGAN[1-9]\d?$/.test(clean) ? clean : null
 }
 
 function resolve() {

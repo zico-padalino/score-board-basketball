@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { TeamLogo } from '../components/TeamLogo'
+import { courtLabel, gameId } from '../lib/gameRoom'
 import { useFullscreen } from '../hooks/useFullscreen'
 import { useGameStore } from '../store/gameStore'
 import type { TeamId } from '../types/game'
@@ -163,6 +164,7 @@ export function DisplayPage() {
         <div className={`display-live-pill ${clockRunning ? 'on' : ''}`}>
           <span className="live-dot" />
           {clockRunning ? 'LIVE' : status.toUpperCase()}
+          <span className="display-court">· {courtLabel(gameId)}</span>
         </div>
       </header>
 

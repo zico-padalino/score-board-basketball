@@ -730,6 +730,12 @@ button {
   font-weight: 800;
 }
 
+.display-court {
+  margin-left: 0.35rem;
+  opacity: 0.65;
+  font-weight: 700;
+}
+
 .op-court {
   font-size: 0.68rem;
   font-weight: 800;
