@@ -163,15 +163,66 @@ export async function resetMatch(matchId: string) {
   unwrap(await db().from('match_states').delete().eq('match_id', matchId))
 }
 
+async function advanceWinner(match: Match, homeScore: number, awayScore: number) {
+  const winner = matchWinner({ ...match, home_score: homeScore, away_score: awayScore })
+  if (match.stage === 'knockout' && match.next_match_id && match.next_slot && winner) {
+    await updateMatch(match.next_match_id, { [`${match.next_slot}_team_id`]: winner })
+  }
+}
+
+/**
+ * Koreksi skor laga dari jadwal. Kalau state scoreboard laga tersimpan, selisihnya
+ * dicatat sebagai koreksi skor di babak terakhir supaya skor per babak & box score ikut sinkron.
+ */
+export async function editMatchScore(match: Match, homeScore: number, awayScore: number) {
+  const state = await getMatchState(match.id)
+  if (!state) {
+    await updateMatch(match.id, { home_score: homeScore, away_score: awayScore })
+  } else {
+    const sum = (team: 'home' | 'away') =>
+      state.scoreEvents.filter((e) => e.teamId === team).reduce((s, e) => s + e.points, 0)
+    const adjust = (team: 'home' | 'away', target: number) => {
+      const delta = target - sum(team)
+      if (delta === 0) return []
+      return [
+        {
+          id: `adj_${crypto.randomUUID().slice(0, 8)}`,
+          teamId: team,
+          playerId: null,
+          points: delta,
+          period: state.period,
+          clockMs: state.clockMs,
+          kind: 'adj' as const,
+          timestamp: Date.now(),
+        },
+      ]
+    }
+    const next: GameState = {
+      ...state,
+      scoreEvents: [...state.scoreEvents, ...adjust('home', homeScore), ...adjust('away', awayScore)],
+    }
+    const live = liveFromState(next)
+    await Promise.all([
+      updateMatch(match.id, {
+        home_score: live.home_score,
+        away_score: live.away_score,
+        period_scores: live.period_scores,
+      }),
+      db()
+        .from('match_states')
+        .upsert({ match_id: match.id, state: next, updated_at: new Date().toISOString() })
+        .then(unwrap),
+    ])
+  }
+  if (match.status === 'finished') await advanceWinner(match, homeScore, awayScore)
+}
+
 /** Simpan hasil akhir; di babak gugur pemenang otomatis masuk laga berikutnya. */
 export async function finalizeMatch(matchId: string, gameState: GameState) {
   const match = await getMatch(matchId)
   if (!match) throw new Error('Laga tidak ditemukan')
   const live = await saveMatchProgress(matchId, { ...gameState, status: 'finished' })
-  const winner = matchWinner({ ...match, home_score: live.home_score, away_score: live.away_score })
-  if (match.stage === 'knockout' && match.next_match_id && match.next_slot && winner) {
-    await updateMatch(match.next_match_id, { [`${match.next_slot}_team_id`]: winner })
-  }
+  await advanceWinner(match, live.home_score, live.away_score)
 }
 
 /**

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { LiveClock } from '../../components/LiveClock'
 import { TeamLogo } from '../../components/TeamLogo'
-import { deleteMatch, resetMatch, updateMatch } from '../../lib/tournamentApi'
+import { deleteMatch, editMatchScore, resetMatch, updateMatch } from '../../lib/tournamentApi'
 import { flushGameSave } from '../../hooks/useScoreboardSync'
 import { useGameStore } from '../../store/gameStore'
 import type { Match, TournamentTeam } from '../../types/tournament'
@@ -63,7 +63,19 @@ export function MatchRow({
   const [venue, setVenue] = useState(match.venue)
   const [homeId, setHomeId] = useState(match.home_team_id ?? '')
   const [awayId, setAwayId] = useState(match.away_team_id ?? '')
+  const [homeScore, setHomeScore] = useState(String(match.home_score))
+  const [awayScore, setAwayScore] = useState(String(match.away_score))
   const [busy, setBusy] = useState(false)
+
+  const startEdit = () => {
+    setWhen(toLocalInput(match.scheduled_at))
+    setVenue(match.venue)
+    setHomeId(match.home_team_id ?? '')
+    setAwayId(match.away_team_id ?? '')
+    setHomeScore(String(match.home_score))
+    setAwayScore(String(match.away_score))
+    setEditing(true)
+  }
 
   const home = match.home_team_id ? teamById.get(match.home_team_id) : undefined
   const away = match.away_team_id ? teamById.get(match.away_team_id) : undefined
@@ -72,10 +84,41 @@ export function MatchRow({
   const showScore = match.status !== 'scheduled'
   const placeholder = match.stage === 'knockout' ? 'Menunggu pemenang' : 'TBD'
 
-  const save = async (patch: Partial<Match>) => {
+  const saveAll = async () => {
+    const h = Number.parseInt(homeScore, 10)
+    const a = Number.parseInt(awayScore, 10)
+    const scoreChanged = showScore && (h !== match.home_score || a !== match.away_score)
+    if (scoreChanged && (!Number.isFinite(h) || !Number.isFinite(a) || h < 0 || a < 0)) {
+      window.alert('Skor harus angka 0 atau lebih')
+      return
+    }
+    if (scoreChanged && finished && h === a) {
+      window.alert('Laga yang sudah selesai tidak boleh imbang')
+      return
+    }
+    const teamsChanged =
+      (homeId || null) !== match.home_team_id || (awayId || null) !== match.away_team_id
+    if (teamsChanged && finished && !window.confirm('Ganti tim pada laga yang sudah selesai? Klasemen akan dihitung ulang.')) {
+      return
+    }
     setBusy(true)
     try {
-      await updateMatch(match.id, patch)
+      await updateMatch(match.id, {
+        scheduled_at: fromLocalInput(when),
+        venue: venue.trim(),
+        home_team_id: homeId || null,
+        away_team_id: awayId || null,
+      })
+      if (scoreChanged) {
+        const store = useGameStore.getState()
+        if (store.match?.id === match.id && store.status !== 'finished') {
+          store.setTeamScore('home', h)
+          store.setTeamScore('away', a)
+          flushGameSave()
+        } else {
+          await editMatchScore(match, h, a)
+        }
+      }
       setEditing(false)
       onChanged()
     } catch (e) {
@@ -136,7 +179,11 @@ export function MatchRow({
         >
           {openLabel}
         </button>
-        <button type="button" className="btn btn-sm btn-ghost" onClick={() => setEditing((v) => !v)}>
+        <button
+          type="button"
+          className="btn btn-sm btn-ghost"
+          onClick={() => (editing ? setEditing(false) : startEdit())}
+        >
           Edit
         </button>
       </div>
@@ -151,9 +198,33 @@ export function MatchRow({
             <label>Lapangan</label>
             <input value={venue} onChange={(e) => setVenue(e.target.value)} />
           </div>
+          {showScore && (
+            <>
+              <div className="field">
+                <label>Skor {home?.name ?? 'Home'}</label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  value={homeScore}
+                  onChange={(e) => setHomeScore(e.target.value)}
+                />
+              </div>
+              <div className="field">
+                <label>Skor {away?.name ?? 'Away'}</label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  value={awayScore}
+                  onChange={(e) => setAwayScore(e.target.value)}
+                />
+              </div>
+            </>
+          )}
           <div className="field">
             <label>Home</label>
-            <select value={homeId} disabled={finished} onChange={(e) => setHomeId(e.target.value)}>
+            <select value={homeId} onChange={(e) => setHomeId(e.target.value)}>
               <option value="">—</option>
               {teams.map((t) => (
                 <option key={t.id} value={t.id}>
@@ -164,7 +235,7 @@ export function MatchRow({
           </div>
           <div className="field">
             <label>Away</label>
-            <select value={awayId} disabled={finished} onChange={(e) => setAwayId(e.target.value)}>
+            <select value={awayId} onChange={(e) => setAwayId(e.target.value)}>
               <option value="">—</option>
               {teams.map((t) => (
                 <option key={t.id} value={t.id}>
@@ -178,14 +249,7 @@ export function MatchRow({
               type="button"
               className="btn btn-sm btn-navy"
               disabled={busy}
-              onClick={() =>
-                save({
-                  scheduled_at: fromLocalInput(when),
-                  venue: venue.trim(),
-                  home_team_id: homeId || null,
-                  away_team_id: awayId || null,
-                })
-              }
+              onClick={() => void saveAll()}
             >
               Simpan
             </button>
