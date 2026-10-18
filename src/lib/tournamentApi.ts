@@ -127,6 +127,14 @@ export async function getMatchState(matchId: string): Promise<GameState | null> 
   return row?.state ?? null
 }
 
+export async function listMatchStates(matchIds: string[]): Promise<Map<string, GameState>> {
+  if (matchIds.length === 0) return new Map()
+  const rows = unwrap(
+    await db().from('match_states').select('match_id,state').in('match_id', matchIds),
+  ) as { match_id: string; state: GameState }[]
+  return new Map(rows.map((r) => [r.match_id, r.state]))
+}
+
 export async function saveMatchProgress(matchId: string, state: GameState) {
   const live = liveFromState(state)
   const [a, b] = await Promise.all([
