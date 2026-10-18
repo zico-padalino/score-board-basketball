@@ -1,9 +1,10 @@
 import { TeamLogo } from '../../components/TeamLogo'
 import type { Match, TournamentTeam } from '../../types/tournament'
 import { formatDay, formatTime } from '../../utils/datetime'
+import { periodLabel } from '../../utils/format'
 
-function periodHeaders(count: number) {
-  return Array.from({ length: count }, (_, i) => (i < 4 ? `Q${i + 1}` : `OT${i - 3}`))
+function periodHeaders(count: number, periods: number) {
+  return Array.from({ length: count }, (_, i) => periodLabel(i + 1, periods))
 }
 
 export function ResultsTab({
@@ -37,7 +38,8 @@ export function ResultsTab({
         const away = m.away_team_id ? teamById.get(m.away_team_id) : undefined
         const homeQ = m.period_scores?.home ?? []
         const awayQ = m.period_scores?.away ?? []
-        const count = Math.max(4, homeQ.length, awayQ.length)
+        const periods = m.period_scores?.periods ?? 4
+        const count = Math.max(periods, homeQ.length, awayQ.length)
         const rows = [
           { team: home, q: homeQ, total: m.home_score, won: m.home_score > m.away_score },
           { team: away, q: awayQ, total: m.away_score, won: m.away_score > m.home_score },
@@ -52,7 +54,7 @@ export function ResultsTab({
               <thead>
                 <tr>
                   <th className="name">Tim</th>
-                  {periodHeaders(count).map((h) => (
+                  {periodHeaders(count, periods).map((h) => (
                     <th key={h}>{h}</th>
                   ))}
                   <th>Total</th>

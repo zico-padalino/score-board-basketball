@@ -3476,6 +3476,19 @@ button {
   flex-wrap: wrap;
 }
 
+.timing-warn {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.timing-preview {
+  margin: 0 0 0.5rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 10px;
+  background: rgba(23, 86, 122, 0.08);
+  font-size: 0.9rem;
+}
+
 .live-clock {
   flex-basis: 100%;
   display: inline-flex;

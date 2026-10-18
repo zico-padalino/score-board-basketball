@@ -8,6 +8,8 @@ export interface TournamentSettings {
   groupCount: number
   advancePerGroup: number
   doubleRoundRobin: boolean
+  /** Jumlah babak per laga (4 kuarter, 2 babak, dst). */
+  periods: number
   periodMinutes: number
   /** Perkiraan lama satu laga di dunia nyata (termasuk jeda kuarter & jam berhenti). */
   matchMinutes?: number
@@ -62,6 +64,8 @@ export interface Match {
 export interface PeriodScores {
   home?: number[]
   away?: number[]
+  /** Jumlah babak reguler laga ini. */
+  periods?: number
 }
 
 /** Kolom live yang ditulis scoreboard ke baris laga. */
@@ -98,8 +102,16 @@ export const DEFAULT_TOURNAMENT_SETTINGS: TournamentSettings = {
   groupCount: 2,
   advancePerGroup: 2,
   doubleRoundRobin: false,
+  periods: 4,
   periodMinutes: 10,
 }
+
+export const PERIOD_OPTIONS = [
+  { value: 4, label: '4 kuarter' },
+  { value: 2, label: '2 babak' },
+  { value: 3, label: '3 babak' },
+  { value: 1, label: '1 babak' },
+]
 
 export const WIN_POINTS = 3
 export const LOSS_POINTS = 1

@@ -2,12 +2,17 @@ import { useEffect, useRef, useState } from 'react'
 import { TeamLogo } from '../components/TeamLogo'
 import { useFullscreen } from '../hooks/useFullscreen'
 import { useGameStore } from '../store/gameStore'
-import type { Period, TeamId } from '../types/game'
-import { formatClock, formatShotClock, periodLabel } from '../utils/format'
+import type { TeamId } from '../types/game'
+import {
+  formatClock,
+  formatShotClock,
+  periodLabel,
+  periodsOf,
+  regularPeriods,
+} from '../utils/format'
 import { periodScore, teamFoulsInPeriod, teamScore } from '../utils/stats'
 import { unlockAudio } from '../utils/buzzer'
 
-const PERIODS: Period[] = [1, 2, 3, 4]
 
 export function DisplayPage() {
   const home = useGameStore((s) => s.home)
@@ -20,6 +25,8 @@ export function DisplayPage() {
   const status = useGameStore((s) => s.status)
   const clockRunning = useGameStore((s) => s.clockRunning)
   const config = useGameStore((s) => s.config)
+  const periods = periodsOf(config)
+  const PERIODS = regularPeriods(periods)
   const state = useGameStore()
 
   const homeScore = teamScore(scoreEvents, 'home')
@@ -96,12 +103,12 @@ export function DisplayPage() {
   const shotPct = Math.min(100, (shotClockMs / config.shotClockMs) * 100)
 
   const otHome = scoreEvents
-    .filter((e) => e.teamId === 'home' && e.period > 4)
+    .filter((e) => e.teamId === 'home' && e.period > periods)
     .reduce((s, e) => s + e.points, 0)
   const otAway = scoreEvents
-    .filter((e) => e.teamId === 'away' && e.period > 4)
+    .filter((e) => e.teamId === 'away' && e.period > periods)
     .reduce((s, e) => s + e.points, 0)
-  const showOt = period > 4 || otHome > 0 || otAway > 0
+  const showOt = period > periods || otHome > 0 || otAway > 0
 
   const foulLights = (count: number) =>
     Array.from({ length: 5 }, (_, i) => (
@@ -200,7 +207,7 @@ export function DisplayPage() {
         </section>
 
         <section className="display-mid">
-          <div className="mid-period">{periodLabel(period)}</div>
+          <div className="mid-period">{periodLabel(period, periods)}</div>
           <div
             className={[
               'mid-clock',
@@ -218,7 +225,7 @@ export function DisplayPage() {
               className="shot-ring"
               style={{
                 background: `conic-gradient(${
-                  shotLow ? '#ff5a5a' : '#e85d04'
+                  shotLow ? '#ff5a5a' : '#f26b12'
                 } ${shotPct}%, rgba(255,255,255,0.08) 0)`,
               }}
             >
@@ -235,11 +242,11 @@ export function DisplayPage() {
                 <th />
                 {PERIODS.map((p) => (
                   <th key={p} className={period === p ? 'now' : ''}>
-                    Q{p}
+                    {periodLabel(p, periods)}
                   </th>
                 ))}
                 {showOt && (
-                  <th className={period > 4 ? 'now' : ''}>OT</th>
+                  <th className={period > periods ? 'now' : ''}>OT</th>
                 )}
               </tr>
             </thead>
@@ -254,7 +261,7 @@ export function DisplayPage() {
                   </td>
                 ))}
                 {showOt && (
-                  <td className={period > 4 ? 'now' : ''}>{otHome}</td>
+                  <td className={period > periods ? 'now' : ''}>{otHome}</td>
                 )}
               </tr>
               <tr>
@@ -267,7 +274,7 @@ export function DisplayPage() {
                   </td>
                 ))}
                 {showOt && (
-                  <td className={period > 4 ? 'now' : ''}>{otAway}</td>
+                  <td className={period > periods ? 'now' : ''}>{otAway}</td>
                 )}
               </tr>
             </tbody>
@@ -328,7 +335,7 @@ export function DisplayPage() {
             </span>
             <strong className="ticker-pts">+{lastScore.points}</strong>
             <span className="ticker-when">
-              {periodLabel(lastScore.period)} · {formatClock(lastScore.clockMs)}
+              {periodLabel(lastScore.period, periods)} · {formatClock(lastScore.clockMs)}
             </span>
           </div>
         ) : (

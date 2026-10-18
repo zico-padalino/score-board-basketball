@@ -85,6 +85,8 @@ export interface GameEvent {
 }
 
 export interface GameConfig {
+  /** Jumlah babak reguler (4 = kuarter, 2 = dua babak). */
+  periods: number
   periodLengthMs: number
   otLengthMs: number
   shotClockMs: number
@@ -118,6 +120,7 @@ export interface GameState {
 }
 
 export const DEFAULT_CONFIG: GameConfig = {
+  periods: 4,
   periodLengthMs: 10 * 60 * 1000,
   otLengthMs: 5 * 60 * 1000,
   shotClockMs: 24 * 1000,

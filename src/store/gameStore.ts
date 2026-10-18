@@ -13,7 +13,7 @@ import type {
 } from '../types/game'
 import { DEFAULT_CONFIG } from '../types/game'
 import { emptyStats } from '../utils/stats'
-import { uid } from '../utils/format'
+import { periodsOf, uid } from '../utils/format'
 
 function makePlayers(prefix: string, count = 12): Player[] {
   return Array.from({ length: count }, (_, i) => ({
@@ -279,7 +279,7 @@ export const useGameStore = create<Store>()(
         const state = get()
         const next = Math.min(8, state.period + 1) as Period
         const length =
-          next <= 4 ? state.config.periodLengthMs : state.config.otLengthMs
+          next <= periodsOf(state.config) ? state.config.periodLengthMs : state.config.otLengthMs
         set({
           period: next,
           clockMs: length,
@@ -317,7 +317,7 @@ export const useGameStore = create<Store>()(
         if (state.period <= 1) return
         const prev = (state.period - 1) as Period
         const length =
-          prev <= 4 ? state.config.periodLengthMs : state.config.otLengthMs
+          prev <= periodsOf(state.config) ? state.config.periodLengthMs : state.config.otLengthMs
         set({
           period: prev,
           clockMs: length,
@@ -592,6 +592,7 @@ export const useGameStore = create<Store>()(
         return {
           ...current,
           ...p,
+          config: { ...DEFAULT_CONFIG, ...p.config },
           match: p.match ?? null,
           home: {
             ...current.home,

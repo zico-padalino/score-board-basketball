@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { createTournament, listTournaments } from '../lib/tournamentApi'
 import type { Tournament, TournamentFormat } from '../types/tournament'
-import { DEFAULT_TOURNAMENT_SETTINGS, FORMAT_LABELS } from '../types/tournament'
+import { DEFAULT_TOURNAMENT_SETTINGS, FORMAT_LABELS, PERIOD_OPTIONS } from '../types/tournament'
 
 export function TournamentsPage() {
   const navigate = useNavigate()
@@ -150,7 +150,21 @@ export function TournamentsPage() {
           )}
           <div className="grid-2">
             <div className="field">
-              <label htmlFor="tPeriod">Durasi kuarter (menit)</label>
+              <label htmlFor="tPeriods">Jumlah babak</label>
+              <select
+                id="tPeriods"
+                value={settings.periods}
+                onChange={(e) => setSettings({ ...settings, periods: Number(e.target.value) })}
+              >
+                {PERIOD_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="tPeriod">Menit per {settings.periods === 4 ? 'kuarter' : 'babak'}</label>
               <input
                 id="tPeriod"
                 type="number"

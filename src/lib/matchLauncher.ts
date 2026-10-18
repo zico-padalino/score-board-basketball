@@ -53,7 +53,10 @@ export async function openMatchInScoreboard(
     awayLogo: away.logo,
     homePlayers: rosterFor(home, 'home'),
     awayPlayers: rosterFor(away, 'away'),
-    config: { periodLengthMs: settings.periodMinutes * 60 * 1000 },
+    config: {
+      periods: settings.periods,
+      periodLengthMs: settings.periodMinutes * 60 * 1000,
+    },
     match: link,
   })
   const s = useGameStore.getState()

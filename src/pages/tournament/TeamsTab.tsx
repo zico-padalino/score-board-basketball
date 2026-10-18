@@ -17,6 +17,7 @@ import {
   updateTournament,
 } from '../../lib/tournamentApi'
 import type { Match, Tournament, TournamentSettings, TournamentTeam } from '../../types/tournament'
+import { PERIOD_OPTIONS } from '../../types/tournament'
 
 const COLORS = ['#e85d04', '#1d3557', '#2a9d8f', '#c1121f', '#6a4c93', '#f4a261', '#264653', '#8ac926']
 
@@ -292,7 +293,21 @@ export function TeamsTab({
             </div>
           )}
           <div className="field">
-            <label htmlFor="sPeriod">Durasi kuarter (menit)</label>
+            <label htmlFor="sPeriods">Jumlah babak</label>
+            <select
+              id="sPeriods"
+              value={draftSettings.periods}
+              onChange={(e) => setDraftSettings({ ...draftSettings, periods: Number(e.target.value) })}
+            >
+              {PERIOD_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor="sPeriod">Menit per {draftSettings.periods === 4 ? 'kuarter' : 'babak'}</label>
             <input
               id="sPeriod"
               type="number"

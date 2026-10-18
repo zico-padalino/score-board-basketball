@@ -1,13 +1,14 @@
 import { TeamLogo } from '../components/TeamLogo'
 import { useGameStore } from '../store/gameStore'
-import { formatClock, periodLabel } from '../utils/format'
+import { formatClock, periodLabel, periodsOf, regularPeriods } from '../utils/format'
 import { periodScore, teamFoulsInPeriod, teamScore } from '../utils/stats'
-import type { Period, Team } from '../types/game'
-
-const periods: Period[] = [1, 2, 3, 4]
+import type { Team } from '../types/game'
 
 export function ScoresheetPage() {
   const state = useGameStore()
+  const periodCount = periodsOf(state.config)
+  const periods = regularPeriods(periodCount)
+  const label = (p: number) => periodLabel(p, periodCount)
   const homeScore = teamScore(state.scoreEvents, 'home')
   const awayScore = teamScore(state.scoreEvents, 'away')
 
@@ -24,10 +25,9 @@ export function ScoresheetPage() {
             <tr>
               <th>No</th>
               <th className="name">Pemain</th>
-              <th>Q1</th>
-              <th>Q2</th>
-              <th>Q3</th>
-              <th>Q4</th>
+              {periods.map((p) => (
+                <th key={p}>{label(p)}</th>
+              ))}
               <th>OT</th>
               <th>PTS</th>
               <th>PF</th>
@@ -45,16 +45,15 @@ export function ScoresheetPage() {
                   .filter((e) => e.period === period)
                   .reduce((s, e) => s + e.points, 0)
               const ot = playerEvents
-                .filter((e) => e.period > 4)
+                .filter((e) => e.period > periodCount)
                 .reduce((s, e) => s + e.points, 0)
               return (
                 <tr key={p.id}>
                   <td>{p.number}</td>
                   <td className="name">{p.name}</td>
-                  <td>{q(1) || ''}</td>
-                  <td>{q(2) || ''}</td>
-                  <td>{q(3) || ''}</td>
-                  <td>{q(4) || ''}</td>
+                  {periods.map((pp) => (
+                    <td key={pp}>{q(pp) || ''}</td>
+                  ))}
                   <td>{ot || ''}</td>
                   <td>
                     <strong>{st?.pts ?? 0}</strong>
@@ -72,7 +71,7 @@ export function ScoresheetPage() {
             <tr>
               <th>Team Fouls</th>
               {periods.map((p) => (
-                <th key={p}>Q{p}</th>
+                <th key={p}>{label(p)}</th>
               ))}
               <th>Timeouts</th>
             </tr>
@@ -120,7 +119,7 @@ export function ScoresheetPage() {
           <div style={{ textAlign: 'center' }}>
             <div className="muted">PERIOD</div>
             <strong style={{ fontSize: '1.4rem' }}>
-              {periodLabel(state.period)}
+              {label(state.period)}
             </strong>
             <div className="muted">{formatClock(state.clockMs)}</div>
           </div>
@@ -142,10 +141,9 @@ export function ScoresheetPage() {
           <thead>
             <tr>
               <th>Tim</th>
-              <th>Q1</th>
-              <th>Q2</th>
-              <th>Q3</th>
-              <th>Q4</th>
+              {periods.map((p) => (
+                <th key={p}>{label(p)}</th>
+              ))}
               <th>OT</th>
               <th>Total</th>
             </tr>
@@ -154,7 +152,7 @@ export function ScoresheetPage() {
             {(['home', 'away'] as const).map((id) => {
               const team = state[id]
               const ot = state.scoreEvents
-                .filter((e) => e.teamId === id && e.period > 4)
+                .filter((e) => e.teamId === id && e.period > periodCount)
                 .reduce((s, e) => s + e.points, 0)
               return (
                 <tr key={id}>
@@ -194,7 +192,7 @@ export function ScoresheetPage() {
                   return (
                     <li key={e.id}>
                       <span>
-                        {periodLabel(e.period)} {formatClock(e.clockMs)} · #
+                        {label(e.period)} {formatClock(e.clockMs)} · #
                         {player?.number ?? '—'} +{e.points}
                       </span>
                       <span>{running}</span>
@@ -219,7 +217,7 @@ export function ScoresheetPage() {
                   return (
                     <li key={e.id}>
                       <span>
-                        {periodLabel(e.period)} {formatClock(e.clockMs)} · #
+                        {label(e.period)} {formatClock(e.clockMs)} · #
                         {player?.number ?? '—'} +{e.points}
                       </span>
                       <span>{running}</span>

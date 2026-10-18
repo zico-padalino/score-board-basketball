@@ -1,14 +1,16 @@
 import type { GameState } from '../types/game'
 import type { MatchLive } from '../types/tournament'
+import { periodsOf } from '../utils/format'
 import { periodScore, teamScore } from '../utils/stats'
 
 export function liveFromState(state: GameState): MatchLive {
+  const periods = periodsOf(state.config)
   const lastPeriod = Math.max(
-    4,
+    periods,
     state.period,
     ...state.scoreEvents.map((e) => e.period),
   )
-  const periods = Array.from({ length: lastPeriod }, (_, i) => i + 1)
+  const all = Array.from({ length: lastPeriod }, (_, i) => i + 1)
   return {
     status: state.status === 'finished' ? 'finished' : 'live',
     home_score: teamScore(state.scoreEvents, 'home'),
@@ -19,8 +21,9 @@ export function liveFromState(state: GameState): MatchLive {
     clock_running: state.clockRunning && state.status !== 'finished',
     live_at: new Date().toISOString(),
     period_scores: {
-      home: periods.map((p) => periodScore(state.scoreEvents, 'home', p)),
-      away: periods.map((p) => periodScore(state.scoreEvents, 'away', p)),
+      home: all.map((p) => periodScore(state.scoreEvents, 'home', p)),
+      away: all.map((p) => periodScore(state.scoreEvents, 'away', p)),
+      periods,
     },
   }
 }

@@ -5,6 +5,7 @@ import { displayUrl, gameId } from '../lib/gameRoom'
 import { supabase, uploadLogo } from '../lib/supabase'
 import { useGameStore } from '../store/gameStore'
 import type { Player } from '../types/game'
+import { PERIOD_OPTIONS } from '../types/tournament'
 import { uid } from '../utils/format'
 
 const DUMMY_HOME = '/logos/garuda.svg'
@@ -50,6 +51,7 @@ export function SetupPage() {
   const [homeLogo, setHomeLogo] = useState(DUMMY_HOME)
   const [awayLogo, setAwayLogo] = useState(DUMMY_AWAY)
   const [periodMinutes, setPeriodMinutes] = useState(10)
+  const [periods, setPeriods] = useState(4)
   const [homePlayers, setHomePlayers] = useState(() => blankRoster('home'))
   const [awayPlayers, setAwayPlayers] = useState(() => blankRoster('away'))
   const [logoError, setLogoError] = useState<string | null>(null)
@@ -101,6 +103,7 @@ export function SetupPage() {
       homePlayers,
       awayPlayers,
       config: {
+        periods,
         periodLengthMs: periodMinutes * 60 * 1000,
       },
     })
@@ -316,7 +319,21 @@ export function SetupPage() {
         <h3>Pengaturan pertandingan</h3>
         <div className="grid-3">
           <div className="field">
-            <label htmlFor="periodMin">Durasi kuarter (menit)</label>
+            <label htmlFor="periodsCount">Jumlah babak</label>
+            <select
+              id="periodsCount"
+              value={periods}
+              onChange={(e) => setPeriods(Number(e.target.value))}
+            >
+              {PERIOD_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor="periodMin">Menit per {periods === 4 ? 'kuarter' : 'babak'}</label>
             <input
               id="periodMin"
               type="number"

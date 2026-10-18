@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Match } from '../types/tournament'
 import { formatClock, periodLabel } from '../utils/format'
-import type { Period } from '../types/game'
 
 const STALE_MS = 15_000
 
@@ -9,7 +8,7 @@ const STALE_MS = 15_000
 export function LiveClock({
   match,
 }: {
-  match: Pick<Match, 'clock_ms' | 'clock_running' | 'live_at' | 'period'>
+  match: Pick<Match, 'clock_ms' | 'clock_running' | 'live_at' | 'period' | 'period_scores'>
 }) {
   const [base, setBase] = useState(() => ({ at: Date.now(), ms: match.clock_ms }))
   const [now, setNow] = useState(() => Date.now())
@@ -32,7 +31,7 @@ export function LiveClock({
 
   return (
     <span className={`live-clock ${running ? 'running' : ''}`}>
-      <b>{periodLabel(Math.min(8, Math.max(1, match.period)) as Period)}</b>
+      <b>{periodLabel(Math.max(1, match.period), match.period_scores?.periods ?? 4)}</b>
       {formatClock(ms)}
     </span>
   )

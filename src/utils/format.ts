@@ -16,9 +16,19 @@ export function formatShotClock(ms: number): string {
   return String(seconds)
 }
 
-export function periodLabel(period: Period): string {
-  if (period <= 4) return `Q${period}`
-  return `OT${period - 4}`
+/** Q1–Q4 untuk 4 kuarter, B1/B2/... untuk format babak lain, lalu OT1, OT2, ... */
+export function periodLabel(period: Period | number, periods = 4): string {
+  if (period <= periods) return periods === 4 ? `Q${period}` : `B${period}`
+  return `OT${period - periods}`
+}
+
+export function periodsOf(config: { periods?: number } | undefined): number {
+  return config?.periods ?? 4
+}
+
+/** Daftar babak reguler [1..n] untuk tabel skor. */
+export function regularPeriods(periods: number): Period[] {
+  return Array.from({ length: periods }, (_, i) => (i + 1) as Period)
 }
 
 export function uid(prefix = 'id'): string {

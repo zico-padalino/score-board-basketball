@@ -6,7 +6,7 @@ import { gameId } from '../lib/gameRoom'
 import { finalizeMatch } from '../lib/tournamentApi'
 import { useGameStore } from '../store/gameStore'
 import type { Player, TeamId } from '../types/game'
-import { formatClock, formatShotClock, periodLabel } from '../utils/format'
+import { formatClock, formatShotClock, periodLabel, periodsOf } from '../utils/format'
 import { teamFoulsInPeriod, teamScore } from '../utils/stats'
 
 type Toast = { id: number; text: string; tone: 'ok' | 'warn' | 'err' }
@@ -478,7 +478,7 @@ export function OperatorPage() {
             <span className={`tag ${state.status === 'live' ? 'live' : 'ready'}`}>
               {state.status}
             </span>
-            <span className="op-period">{periodLabel(state.period)}</span>
+            <span className="op-period">{periodLabel(state.period, periodsOf(state.config))}</span>
           </div>
 
           <div className="op-clock-block">
@@ -970,7 +970,7 @@ export function OperatorPage() {
                         {team.shortName}
                         {p ? ` #${p.number}` : ''}
                       </span>
-                      <span className="muted">{periodLabel(e.period)}</span>
+                      <span className="muted">{periodLabel(e.period, periodsOf(state.config))}</span>
                     </li>
                   )
                 })}

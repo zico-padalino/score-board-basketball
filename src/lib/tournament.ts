@@ -282,25 +282,54 @@ export function seedsFromGroups(
   return seeds
 }
 
+/** Total jeda antar babak: 2 menit tiap pergantian + ~9 menit ekstra halftime. */
+export function intermissionMinutes(periods: number): number {
+  return periods > 1 ? (periods - 1) * 2 + 9 : 0
+}
+
 /**
- * Perkiraan lama satu laga: 4 kuarter jam bersih, +50% untuk jam berhenti
- * (foul, timeout, lemparan bebas), + jeda antar kuarter & halftime. Dibulatkan ke 5 menit.
+ * Perkiraan lama satu laga: jam bersih semua babak, +50% untuk jam berhenti
+ * (foul, timeout, lemparan bebas), + jeda antar babak. Dibulatkan ke 5 menit.
  */
-export function estimateMatchMinutes(periodMinutes: number): number {
-  const clock = periodMinutes * 4
-  return Math.ceil((clock * 1.5 + 15) / 5) * 5
+export function estimateMatchMinutes(periodMinutes: number, periods = 4): number {
+  const clock = periodMinutes * periods
+  return Math.ceil((clock * 1.5 + intermissionMinutes(periods)) / 5) * 5
 }
 
 export function matchMinutesOf(settings: TournamentSettings): number {
-  return settings.matchMinutes ?? estimateMatchMinutes(settings.periodMinutes)
+  return settings.matchMinutes ?? estimateMatchMinutes(settings.periodMinutes, settings.periods)
 }
 
 export interface ScheduleOptions {
   start: string
   matchMinutes: number
   breakMinutes: number
+  /** 0 = semua laga di hari yang sama. */
   perDay: number
   venue: string
+}
+
+/** Jam selesai laga ke-`count` (terakhir) bila dijadwalkan dengan `opts`. */
+export function scheduleEnd(count: number, opts: ScheduleOptions): Date | null {
+  if (count === 0 || !opts.start) return null
+  const [last] = assignSchedule(
+    Array.from({ length: count }, () => ({ scheduled_at: null, venue: '' })),
+    opts,
+  ).slice(-1)
+  if (!last.scheduled_at) return null
+  return new Date(new Date(last.scheduled_at).getTime() + opts.matchMinutes * 60000)
+}
+
+/** Jumlah laga fase grup (round robin per grup). */
+export function countGroupMatches(teams: TournamentTeam[], double: boolean): number {
+  const sizes = new Map<string, number>()
+  for (const t of teams) {
+    const g = t.group_name || 'A'
+    sizes.set(g, (sizes.get(g) ?? 0) + 1)
+  }
+  let total = 0
+  for (const n of sizes.values()) total += (n * (n - 1)) / 2
+  return double ? total * 2 : total
 }
 
 /** Isi tanggal/jam berurutan: `perDay` laga per hari, tiap slot = lama laga + jeda. */
@@ -309,7 +338,7 @@ export function assignSchedule<T extends Pick<MatchDraft, 'scheduled_at' | 'venu
   opts: ScheduleOptions,
 ): T[] {
   const start = opts.start ? new Date(opts.start) : null
-  const perDay = Math.max(1, opts.perDay)
+  const perDay = opts.perDay > 0 ? opts.perDay : Number.POSITIVE_INFINITY
   const slot = Math.max(1, opts.matchMinutes) + Math.max(0, opts.breakMinutes)
   return matches.map((m, i) => {
     const venue = opts.venue.trim() || m.venue

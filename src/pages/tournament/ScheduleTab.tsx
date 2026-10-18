@@ -3,7 +3,9 @@ import {
   assignSchedule,
   buildGroupMatches,
   buildKnockoutMatches,
+  countGroupMatches,
   estimateMatchMinutes,
+  scheduleEnd,
   matchMinutesOf,
   resolveSettings,
   seedsFromGroups,
@@ -18,6 +20,7 @@ import {
   updateTournament,
 } from '../../lib/tournamentApi'
 import type { Match, Tournament, TournamentTeam } from '../../types/tournament'
+import { PERIOD_OPTIONS } from '../../types/tournament'
 import { dayKey, formatDay, toLocalInput } from '../../utils/datetime'
 import { MatchRow } from './MatchRow'
 
@@ -69,16 +72,37 @@ export function ScheduleTab({
     start: defaultStart(matches),
     matchMinutes: matchMinutesOf(settings),
     breakMinutes: settings.breakMinutes ?? 15,
-    perDay: 4,
+    perDay: 0,
     venue: '',
   }))
-  const estimate = estimateMatchMinutes(settings.periodMinutes)
+  const [periods, setPeriods] = useState(settings.periods)
+  const [periodMinutes, setPeriodMinutes] = useState(settings.periodMinutes)
+  const estimate = estimateMatchMinutes(periodMinutes, periods)
   const slotMinutes = opts.matchMinutes + opts.breakMinutes
+  const periodName = periods === 4 ? 'kuarter' : 'babak'
+
+  const pendingCount = matches.filter((m) => m.status === 'scheduled').length
+  const previewCount =
+    hasGroups && groupMatches.length === 0
+      ? countGroupMatches(teams, settings.doubleRoundRobin)
+      : pendingCount
+  const previewEnd = scheduleEnd(previewCount, opts)
+
+  const changeFormat = (nextPeriods: number, nextMinutes: number) => {
+    const followEstimate = opts.matchMinutes === estimate
+    setPeriods(nextPeriods)
+    setPeriodMinutes(nextMinutes)
+    if (followEstimate) {
+      setOpts((o) => ({ ...o, matchMinutes: estimateMatchMinutes(nextMinutes, nextPeriods) }))
+    }
+  }
 
   const rememberTiming = () =>
     updateTournament(tournament.id, {
       settings: {
         ...tournament.settings,
+        periods,
+        periodMinutes,
         matchMinutes: opts.matchMinutes,
         breakMinutes: opts.breakMinutes,
       },
@@ -234,13 +258,53 @@ export function ScheduleTab({
             />
           </div>
           <div className="field">
-            <label htmlFor="gPerDay">Laga per hari</label>
+            <label htmlFor="gPerDayMode">Laga per hari</label>
+            <select
+              id="gPerDayMode"
+              value={opts.perDay > 0 ? 'custom' : 'all'}
+              onChange={(e) =>
+                setOpts({ ...opts, perDay: e.target.value === 'all' ? 0 : opts.perDay || 4 })
+              }
+            >
+              <option value="all">Semua selesai hari itu juga</option>
+              <option value="custom">Atur jumlah per hari</option>
+            </select>
+          </div>
+          {opts.perDay > 0 && (
+            <div className="field">
+              <label htmlFor="gPerDay">Jumlah laga per hari</label>
+              <input
+                id="gPerDay"
+                type="number"
+                min={1}
+                value={opts.perDay}
+                onChange={(e) => setOpts({ ...opts, perDay: Math.max(1, Number(e.target.value) || 1) })}
+              />
+            </div>
+          )}
+          <div className="field">
+            <label htmlFor="gPeriods">Jumlah babak</label>
+            <select
+              id="gPeriods"
+              value={periods}
+              onChange={(e) => changeFormat(Number(e.target.value), periodMinutes)}
+            >
+              {PERIOD_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor="gPeriodMin">Menit per {periodName}</label>
             <input
-              id="gPerDay"
+              id="gPeriodMin"
               type="number"
               min={1}
-              value={opts.perDay}
-              onChange={(e) => setOpts({ ...opts, perDay: Number(e.target.value) || 1 })}
+              max={40}
+              value={periodMinutes}
+              onChange={(e) => changeFormat(periods, Math.max(1, Number(e.target.value) || 1))}
             />
           </div>
         </div>
@@ -253,11 +317,33 @@ export function ScheduleTab({
             onChange={(e) => setOpts({ ...opts, venue: e.target.value })}
           />
         </div>
+        {previewEnd && (
+          <p className="timing-preview">
+            {previewCount} laga
+            {opts.perDay > 0 ? `, ${opts.perDay} per hari` : ' dalam satu hari'} · laga terakhir
+            selesai sekitar{' '}
+            <strong>
+              {previewEnd.toLocaleString('id-ID', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </strong>
+            {opts.perDay === 0 && previewEnd.toDateString() !== new Date(opts.start).toDateString() && (
+              <span className="timing-warn">
+                {' '}
+                — melewati tengah malam. Mulai lebih awal, kurangi lama laga/jeda, atau atur jumlah
+                laga per hari.
+              </span>
+            )}
+          </p>
+        )}
         <p className="muted timing-hint">
           Laga berikutnya mulai {slotMinutes} menit setelah laga sebelumnya ({opts.matchMinutes} menit
-          main + {opts.breakMinutes} menit jeda). Perkiraan lama laga dengan kuarter{' '}
-          {settings.periodMinutes} menit: {estimate} menit (4×{settings.periodMinutes} menit jam
-          bersih, ditambah waktu jam berhenti, jeda kuarter, dan halftime).
+          main + {opts.breakMinutes} menit jeda). Perkiraan lama laga {periods}×{periodMinutes} menit:{' '}
+          {estimate} menit (jam bersih, ditambah waktu jam berhenti dan jeda antar {periodName}).
           {opts.matchMinutes !== estimate && (
             <>
               {' '}
