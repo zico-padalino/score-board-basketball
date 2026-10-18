@@ -9,8 +9,9 @@ import { BracketTab } from '../tournament/BracketTab'
 import { StandingsTab } from '../tournament/StandingsTab'
 import { PublicMatchCard } from './PublicMatchCard'
 import { ResultsTab } from './ResultsTab'
+import { RostersTab } from './RostersTab'
 
-type Tab = 'jadwal' | 'klasemen' | 'hasil' | 'bagan'
+type Tab = 'jadwal' | 'klasemen' | 'hasil' | 'bagan' | 'tim'
 
 export function PublicTournamentPage() {
   const { id = '' } = useParams()
@@ -63,6 +64,7 @@ export function PublicTournamentPage() {
     ...(tournament.format !== 'knockout' ? [{ id: 'klasemen' as Tab, label: 'Klasemen' }] : []),
     { id: 'hasil', label: 'Hasil' },
     ...(tournament.format !== 'group' ? [{ id: 'bagan' as Tab, label: 'Bagan' }] : []),
+    { id: 'tim', label: 'Tim' },
   ]
   const requested = params.get('tab') as Tab | null
   const tab: Tab = tabs.some((t) => t.id === requested) ? (requested as Tab) : 'jadwal'
@@ -135,6 +137,7 @@ export function PublicTournamentPage() {
       {tab === 'klasemen' && <StandingsTab tournament={tournament} teams={teams} matches={matches} />}
       {tab === 'hasil' && <ResultsTab matches={matches} teamById={teamById} />}
       {tab === 'bagan' && <BracketTab matches={matches} teamById={teamById} />}
+      {tab === 'tim' && <RostersTab teams={teams} />}
     </main>
   )
 }

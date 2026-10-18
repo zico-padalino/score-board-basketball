@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { LiveClock } from '../../components/LiveClock'
+import { MatchRosters } from './MatchRosters'
 import { TeamLogo } from '../../components/TeamLogo'
 import type { Match, TournamentTeam } from '../../types/tournament'
 import { formatTimeRange } from '../../utils/datetime'
@@ -30,12 +32,25 @@ export function PublicMatchCard({
   teamById: Map<string, TournamentTeam>
   matchMinutes?: number
 }) {
+  const [open, setOpen] = useState(false)
   const home = match.home_team_id ? teamById.get(match.home_team_id) : undefined
   const away = match.away_team_id ? teamById.get(match.away_team_id) : undefined
   const finished = match.status === 'finished'
 
   return (
-    <div className={`match-row public status-${match.status}`}>
+    <div
+      className={`match-row public clickable status-${match.status} ${open ? 'open' : ''}`}
+      role="button"
+      tabIndex={0}
+      aria-expanded={open}
+      onClick={() => setOpen((v) => !v)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          setOpen((v) => !v)
+        }
+      }}
+    >
       <div className="mr-meta">
         <strong>{formatTimeRange(match.scheduled_at, matchMinutes)}</strong>
         <span>{match.round_label}</span>
@@ -60,7 +75,13 @@ export function PublicMatchCard({
       <div className="mr-actions">
         {match.status === 'live' && <span className="tag live">● Live</span>}
         {finished && <span className="tag ready">Final</span>}
+        <span className="mr-toggle">{open ? 'Tutup ▴' : 'Pemain ▾'}</span>
       </div>
+      {open && (
+        <div onClick={(e) => e.stopPropagation()} className="mr-expand">
+          <MatchRosters match={match} home={home} away={away} />
+        </div>
+      )}
     </div>
   )
 }
