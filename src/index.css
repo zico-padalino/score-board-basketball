@@ -637,7 +637,8 @@ button {
 
 .op-main-clock {
   font-family: var(--font-display);
-  font-size: clamp(2.4rem, 5vw, 3.4rem);
+  font-size: clamp(3rem, 6vw, 4.6rem);
+  font-variant-numeric: tabular-nums;
   letter-spacing: 0.04em;
   line-height: 1;
   color: #f5fafc;
@@ -1330,7 +1331,7 @@ button {
   }
 
   .op-main-clock {
-    font-size: clamp(2.2rem, 10vw, 3rem);
+    font-size: clamp(2.8rem, 10vw, 4rem);
   }
 
   .score-btns .btn {
@@ -1912,7 +1913,7 @@ button {
   }
 
   .op-main-clock {
-    font-size: clamp(2.3rem, 13vw, 2.9rem);
+    font-size: clamp(2.8rem, 16vw, 3.6rem);
   }
 
   .op-shot {
@@ -2192,7 +2193,7 @@ button {
   }
 
   .op-main-clock {
-    font-size: 1.8rem;
+    font-size: 2.4rem;
   }
 
   .op-shot {
@@ -2312,6 +2313,7 @@ button {
   min-height: 100dvh;
   color: var(--display-ink);
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr) auto;
   gap: clamp(0.5rem, 1.5vh, 1rem);
   padding: clamp(0.75rem, 2vw, 1.5rem);
@@ -2460,7 +2462,7 @@ button {
 }
 
 .display.is-fullscreen .mid-clock {
-  font-size: clamp(3.8rem, 7vw, 6.5rem);
+  font-size: clamp(4.5rem, 42cqi, 15rem);
 }
 
 .display-top {
@@ -2548,7 +2550,7 @@ button {
   position: relative;
   z-index: 2;
   display: grid;
-  grid-template-columns: 1fr minmax(200px, 300px) 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 1.2fr) minmax(0, 1fr);
   gap: clamp(0.75rem, 2vw, 1.75rem);
   align-items: stretch;
   width: min(1500px, 100%);
@@ -2768,22 +2770,26 @@ button {
   text-align: center;
   gap: 0.55rem;
   padding: 1rem 0.5rem;
+  container-type: inline-size;
 }
 
 .mid-period {
   font-family: var(--font-display);
-  font-size: clamp(1.6rem, 3vw, 2.3rem);
+  font-size: clamp(1.8rem, 10cqi, 3.4rem);
   letter-spacing: 0.2em;
   color: var(--warn);
 }
 
+/* Jam mengikuti lebar kolom tengah supaya sebesar mungkin tanpa terpotong */
 .mid-clock {
   font-family: var(--font-display);
-  font-size: clamp(3.8rem, 9vw, 6.5rem);
-  letter-spacing: 0.05em;
-  line-height: 0.95;
-  padding: 0.15rem 0.5rem;
-  border-radius: 12px;
+  font-size: clamp(4rem, 40cqi, 13rem);
+  letter-spacing: 0.04em;
+  line-height: 0.9;
+  padding: 0.1rem 0.4rem;
+  border-radius: 14px;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 6px 28px rgba(0, 0, 0, 0.45);
 }
 
 .mid-clock.running {
@@ -2800,8 +2806,8 @@ button {
 }
 
 .shot-ring {
-  width: clamp(110px, 14vw, 148px);
-  height: clamp(110px, 14vw, 148px);
+  width: clamp(110px, 34cqi, 200px);
+  height: clamp(110px, 34cqi, 200px);
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -2828,7 +2834,7 @@ button {
 
 .shot-core strong {
   font-family: var(--font-display);
-  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-size: clamp(2rem, 15cqi, 4.2rem);
   line-height: 1;
   color: var(--orange);
 }
@@ -2966,7 +2972,7 @@ button {
   }
 
   .display-stage {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     height: auto;
     gap: 0.55rem;
   }
@@ -3063,7 +3069,7 @@ button {
   }
 
   .display-stage {
-    grid-template-columns: 1fr minmax(140px, 220px) 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(160px, 1.1fr) minmax(0, 1fr);
     height: 100%;
     min-height: 0;
     gap: 0.45rem;
@@ -3124,12 +3130,12 @@ button {
   }
 
   .mid-clock {
-    font-size: clamp(2rem, 6vw, 3.2rem);
+    font-size: clamp(2.4rem, 38cqi, 5rem);
   }
 
   .shot-ring {
-    width: 78px;
-    height: 78px;
+    width: clamp(70px, 30cqi, 96px);
+    height: clamp(70px, 30cqi, 96px);
   }
 
   .shot-core strong {
