@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { LiveClock } from '../../components/LiveClock'
 import { TeamLogo } from '../../components/TeamLogo'
-import { resetMatch, updateMatch } from '../../lib/tournamentApi'
+import { deleteMatch, resetMatch, updateMatch } from '../../lib/tournamentApi'
+import { useGameStore } from '../../store/gameStore'
 import type { Match, TournamentTeam } from '../../types/tournament'
 import { formatTimeRange, fromLocalInput, toLocalInput } from '../../utils/datetime'
 
@@ -207,6 +208,33 @@ export function MatchRow({
                 Reset hasil
               </button>
             )}
+            <button
+              type="button"
+              className="btn btn-sm btn-danger"
+              disabled={busy}
+              onClick={() => {
+                const label = `${home?.name ?? 'TBD'} vs ${away?.name ?? 'TBD'}`
+                const warn =
+                  match.status === 'scheduled'
+                    ? ''
+                    : '\nSkor dan statistik laga ini ikut terhapus dan klasemen dihitung ulang.'
+                if (!window.confirm(`Hapus laga ${label} (${match.round_label})?${warn}`)) return
+                setBusy(true)
+                deleteMatch(match.id)
+                  .then(() => {
+                    if (useGameStore.getState().match?.id === match.id) {
+                      useGameStore.setState({ match: null })
+                    }
+                    onChanged()
+                  })
+                  .catch((e: Error) => {
+                    window.alert(e.message)
+                    setBusy(false)
+                  })
+              }}
+            >
+              Hapus laga
+            </button>
             <button type="button" className="btn btn-sm btn-ghost" onClick={() => setEditing(false)}>
               Batal
             </button>

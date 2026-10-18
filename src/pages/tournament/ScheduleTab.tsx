@@ -13,7 +13,9 @@ import {
   standingsByGroup,
   type ScheduleOptions,
 } from '../../lib/tournament'
+import { useGameStore } from '../../store/gameStore'
 import {
+  deleteAllMatches,
   deleteStageMatches,
   insertMatches,
   updateMatch,
@@ -171,6 +173,20 @@ export function ScheduleTab({
       if (knockoutMatches.length) await deleteStageMatches(tournament.id, 'knockout')
       await insertMatches(drafts)
       await rememberTiming()
+    })
+
+  const removeAll = () =>
+    run(async () => {
+      const played = matches.filter((m) => m.status !== 'scheduled').length
+      const ok = window.confirm(
+        `Hapus semua ${matches.length} laga di turnamen ini?` +
+          (played ? `\n${played} laga sudah dimainkan — skor dan klasemennya ikut terhapus.` : '') +
+          '\nTim dan roster tidak ikut terhapus.',
+      )
+      if (!ok) return
+      await deleteAllMatches(tournament.id)
+      const linked = useGameStore.getState().match
+      if (linked && linked.tournamentId === tournament.id) useGameStore.setState({ match: null })
     })
 
   const retime = () =>
@@ -385,6 +401,11 @@ export function ScheduleTab({
           {matches.some((m) => m.status === 'scheduled') && (
             <button className="btn btn-ghost" type="button" disabled={busy} onClick={retime}>
               Atur ulang jam jadwal yang ada
+            </button>
+          )}
+          {matches.length > 0 && (
+            <button className="btn btn-danger" type="button" disabled={busy} onClick={removeAll}>
+              Hapus semua jadwal
             </button>
           )}
         </div>

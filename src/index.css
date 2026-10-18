@@ -3141,6 +3141,28 @@ button {
   flex: 1 1 auto;
 }
 
+.tour-list li.with-action {
+  position: relative;
+}
+
+.tour-list li.with-action a {
+  padding-right: 5.5rem;
+}
+
+.tour-delete {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  color: var(--danger);
+}
+
+.tour-delete:hover {
+  transform: translateY(-50%);
+  background: rgba(193, 18, 31, 0.1);
+}
+
 .team-list li {
   display: flex;
   align-items: center;

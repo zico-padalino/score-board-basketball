@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { createTournament, listTournaments } from '../lib/tournamentApi'
+import { createTournament, deleteTournament, listTournaments } from '../lib/tournamentApi'
+import { useGameStore } from '../store/gameStore'
 import type { Tournament, TournamentFormat } from '../types/tournament'
 import { DEFAULT_TOURNAMENT_SETTINGS, FORMAT_LABELS, PERIOD_OPTIONS } from '../types/tournament'
 
@@ -33,6 +34,27 @@ export function TournamentsPage() {
       navigate(`/admin/turnamen/${t.id}?tab=tim`)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal membuat turnamen')
+      setBusy(false)
+    }
+  }
+
+  const onDelete = async (t: Tournament) => {
+    const typed = window.prompt(
+      `Hapus turnamen "${t.name}" beserta semua tim, jadwal, dan hasilnya?\n` +
+        'Ketik HAPUS untuk konfirmasi.',
+    )
+    if (typed?.trim().toUpperCase() !== 'HAPUS') return
+    setBusy(true)
+    setError(null)
+    try {
+      await deleteTournament(t.id)
+      setItems((list) => list?.filter((x) => x.id !== t.id) ?? null)
+      if (useGameStore.getState().match?.tournamentId === t.id) {
+        useGameStore.setState({ match: null })
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Gagal menghapus turnamen')
+    } finally {
       setBusy(false)
     }
   }
@@ -74,7 +96,15 @@ export function TournamentsPage() {
           {items?.length === 0 && <p className="muted">Belum ada turnamen.</p>}
           <ul className="tour-list">
             {items?.map((t) => (
-              <li key={t.id}>
+              <li key={t.id} className="with-action">
+                <button
+                  type="button"
+                  className="btn btn-sm btn-ghost tour-delete"
+                  disabled={busy}
+                  onClick={() => void onDelete(t)}
+                >
+                  Hapus
+                </button>
                 <Link to={`/admin/turnamen/${t.id}`}>
                   <strong>{t.name}</strong>
                   <span className="tag">{FORMAT_LABELS[t.format]}</span>

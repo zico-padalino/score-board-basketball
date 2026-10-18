@@ -106,6 +106,14 @@ export async function updateMatch(id: string, patch: Partial<Match>) {
   unwrap(await db().from('matches').update(patch).eq('id', id))
 }
 
+export async function deleteMatch(id: string) {
+  unwrap(await db().from('matches').delete().eq('id', id))
+}
+
+export async function deleteAllMatches(tournamentId: string) {
+  unwrap(await db().from('matches').delete().eq('tournament_id', tournamentId))
+}
+
 export async function deleteStageMatches(tournamentId: string, stage: Match['stage']) {
   unwrap(
     await db().from('matches').delete().eq('tournament_id', tournamentId).eq('stage', stage),
