@@ -50,8 +50,11 @@ export function MatchRow({
   onChanged,
   showLabel = true,
   matchMinutes,
+  unassigned = 0,
 }: {
   matchMinutes?: number
+  /** Poin tim yang belum dibagi ke pemain di laga ini. */
+  unassigned?: number
   match: Match
   teams: TournamentTeam[]
   teamById: Map<string, TournamentTeam>
@@ -184,11 +187,11 @@ export function MatchRow({
         {showScore && (
           <button
             type="button"
-            className={`btn btn-sm btn-ghost ${pointsOpen ? 'active' : ''}`}
+            className={`btn btn-sm btn-ghost ${pointsOpen ? 'active' : ''} ${unassigned > 0 ? 'needs-points' : ''}`}
             title="Isi poin tiap pemain untuk laga ini"
             onClick={() => setPointsOpen((v) => !v)}
           >
-            Poin pemain
+            Poin pemain{unassigned > 0 ? ` · ${unassigned} belum` : ''}
           </button>
         )}
         <button

@@ -630,6 +630,7 @@ export const useGameStore = create<Store>()(
           playerStats = { ...next, [playerId]: s }
         }
         if (points === 0) return
+        const timestamp = Date.now()
         set({
           playerStats,
           scoreEvents: [
@@ -642,7 +643,20 @@ export const useGameStore = create<Store>()(
               period: state.period,
               clockMs: state.clockMs,
               kind: 'adj',
-              timestamp: Date.now(),
+              timestamp,
+            },
+          ],
+          events: [
+            ...state.events,
+            {
+              id: uid('ev'),
+              type: 'score_adjust',
+              teamId,
+              playerId,
+              period: state.period,
+              clockMs: state.clockMs,
+              points,
+              timestamp,
             },
           ],
         })

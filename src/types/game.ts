@@ -22,6 +22,8 @@ export type StatEventType =
   | 'period_end'
   | 'sub_in'
   | 'sub_out'
+  /** Koreksi skor oleh operator (−1/+1/edit skor); `points` bertanda. */
+  | 'score_adjust'
 
 export interface Player {
   id: string

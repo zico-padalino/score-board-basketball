@@ -66,6 +66,7 @@ export function OperatorPage() {
             'stl',
             'blk',
             'tov',
+            'score_adjust',
           ].includes(e.type),
         )
         .slice(-8)
@@ -1191,13 +1192,25 @@ export function OperatorPage() {
                 {recent.map((e) => {
                   const p = findPlayer(e.teamId, e.playerId)
                   const team = e.teamId === 'home' ? state.home : state.away
-                  const isScore = e.type === 'fg2_made' || e.type === 'fg3_made' || e.type === 'ft_made'
+                  const isAdjust = e.type === 'score_adjust'
+                  const isScore =
+                    isAdjust || e.type === 'fg2_made' || e.type === 'fg3_made' || e.type === 'ft_made'
+                  const adj = e.points ?? 0
                   return (
-                    <li key={e.id}>
-                      <span className="recent-tag">{eventLabel(e.type)}</span>
+                    <li key={e.id} className={isAdjust ? `adjust ${adj < 0 ? 'minus' : ''}` : undefined}>
+                      <span className="recent-tag">
+                        {isAdjust ? `${adj > 0 ? '+' : '−'}${Math.abs(adj)}` : eventLabel(e.type)}
+                      </span>
                       <span className="recent-who">
                         <b style={{ color: team.color }}>{team.name}</b>
-                        {p ? ` · #${p.number} ${p.name}` : isScore ? ' · tanpa pemain' : ''}
+                        {p
+                          ? ` · #${p.number} ${p.name}`
+                          : isAdjust
+                            ? ' · koreksi skor tim'
+                            : isScore
+                              ? ' · tanpa pemain'
+                              : ''}
+                        {isAdjust && p ? ' (koreksi)' : ''}
                       </span>
                       {p && isScore && (
                         <span className="recent-pts">{state.playerStats[p.id]?.pts ?? 0} pts</span>

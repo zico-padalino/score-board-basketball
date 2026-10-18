@@ -130,6 +130,21 @@ export function BoxScoreTab({
     }
   }, [playedKey])
 
+  const unassigned = useMemo(() => {
+    let points = 0
+    let count = 0
+    for (const st of allStates.values()) {
+      let match = 0
+      for (const side of ['home', 'away'] as const) {
+        const players = st[side].players.reduce((s, p) => s + (st.playerStats[p.id]?.pts ?? 0), 0)
+        match += Math.max(0, teamScore(st.scoreEvents, side) - players)
+      }
+      if (match > 0) count += 1
+      points += match
+    }
+    return { points, matches: count }
+  }, [allStates])
+
   const leaders = useMemo(
     () =>
       buildLeaders(played, allStates, teamById)
@@ -233,6 +248,12 @@ export function BoxScoreTab({
         <div className="panel-head">
           <h3>Statistik pemain turnamen</h3>
         </div>
+        {unassigned.points > 0 && (
+          <p className="unassigned-note">
+            {unassigned.points} poin di {unassigned.matches} laga masih tercatat sebagai skor tim
+            (belum per pemain), jadi belum masuk ke statistik pemain di bawah.
+          </p>
+        )}
         <div className="seg-tabs leader-sorts no-print">
           {SORTS.map((s) => (
             <button

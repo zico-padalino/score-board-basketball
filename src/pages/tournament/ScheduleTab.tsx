@@ -24,6 +24,7 @@ import {
 import type { Match, Tournament, TournamentTeam } from '../../types/tournament'
 import { PERIOD_OPTIONS } from '../../types/tournament'
 import { dayKey, formatDay, toLocalInput } from '../../utils/datetime'
+import { useUnassignedPoints } from '../../hooks/useUnassignedPoints'
 import { MatchRow } from './MatchRow'
 
 type Filter = 'all' | 'group' | 'knockout'
@@ -67,6 +68,7 @@ export function ScheduleTab({
   const knockoutMatches = matches.filter((m) => m.stage === 'knockout')
 
   const [filter, setFilter] = useState<Filter>('all')
+  const { byMatch: unassigned, refresh: refreshUnassigned } = useUnassignedPoints(matches)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [shuffleSeeds, setShuffleSeeds] = useState(false)
@@ -449,8 +451,12 @@ export function ScheduleTab({
                 teams={teams}
                 teamById={teamById}
                 onOpen={onOpen}
-                onChanged={reload}
+                onChanged={() => {
+                  reload()
+                  refreshUnassigned()
+                }}
                 matchMinutes={matchMinutesOf(settings)}
+                unassigned={unassigned.get(m.id) ?? 0}
               />
             ))}
           </div>
