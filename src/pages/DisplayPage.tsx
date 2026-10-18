@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { TeamLogo } from '../components/TeamLogo'
 import { useFullscreen } from '../hooks/useFullscreen'
 import { useGameStore } from '../store/gameStore'
@@ -136,9 +135,6 @@ export function DisplayPage() {
       </div>
 
       <div className="display-controls no-print">
-        <Link to="/admin/operator" className="display-back">
-          ← Operator
-        </Link>
         <button
           type="button"
           className="display-fs-btn"
@@ -151,9 +147,9 @@ export function DisplayPage() {
 
       <header className="display-top">
         <div className="display-brand">
-          <span className="brand-orb" />
+          <img className="brand-orb" src="/halcion-logo.png" alt="Halcion Community" />
           <div>
-            <strong>COURTSIDE</strong>
+            <strong>HALCION</strong>
             <em>LIVE SCOREBOARD</em>
           </div>
         </div>
@@ -337,7 +333,7 @@ export function DisplayPage() {
           </div>
         ) : (
           <div className="ticker-track idle">
-            <span className="ticker-badge">COURTSIDE</span>
+            <span className="ticker-badge">HALCION</span>
             <span>Siap untuk tip-off</span>
           </div>
         )}

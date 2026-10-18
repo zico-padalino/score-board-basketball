@@ -47,9 +47,9 @@ function AdminShell({ email }: { email?: string }) {
     <div className={`app-shell route-${location.pathname.split('/')[2] || 'setup'}`}>
       <header className="topnav">
         <div className="brand">
-          <div className="brand-mark" aria-hidden />
+          <img className="brand-mark" src="/halcion-logo.png" alt="Halcion Community" />
           <div>
-            <h1>COURTSIDE</h1>
+            <h1>HALCION</h1>
             <span>Admin{email ? ` · ${email}` : ''}</span>
           </div>
         </div>

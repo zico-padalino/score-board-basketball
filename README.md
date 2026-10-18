@@ -1,4 +1,4 @@
-# COURTSIDE — Basketball Scoreboard
+# Halcion Community — Basketball Scoreboard
 
 Aplikasi web scoreboard basketball dengan scoresheet resmi dan box score statistik lengkap. Siap dipakai di desktop & mobile, dengan layar penonton full screen.
 

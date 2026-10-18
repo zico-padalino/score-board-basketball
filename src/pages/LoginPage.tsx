@@ -32,9 +32,9 @@ export function LoginPage() {
     <main className="page login-page">
       <form className="panel login-card" onSubmit={onSubmit}>
         <div className="brand">
-          <div className="brand-mark" aria-hidden />
+          <img className="brand-mark" src="/halcion-logo.png" alt="Halcion Community" />
           <div>
-            <h1>COURTSIDE</h1>
+            <h1>HALCION</h1>
             <span>Login admin</span>
           </div>
         </div>

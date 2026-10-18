@@ -5,10 +5,10 @@ export function PublicLayout() {
     <div className="app-shell public-shell">
       <header className="topnav">
         <Link to="/" className="brand">
-          <div className="brand-mark" aria-hidden />
+          <img className="brand-mark" src="/halcion-logo.png" alt="Halcion Community" />
           <div>
-            <h1>COURTSIDE</h1>
-            <span>Jadwal · Klasemen · Hasil</span>
+            <h1>HALCION</h1>
+            <span>Basketball Community</span>
           </div>
         </Link>
         <Link to="/login" className="btn btn-sm btn-ghost no-print">
