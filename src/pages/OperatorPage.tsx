@@ -137,7 +137,10 @@ export function OperatorPage() {
     const sel = requirePlayer()
     if (!sel) return
     fn(sel)
-    showToast(label, tone)
+    const p = findPlayer(sel.teamId, sel.playerId)
+    showToast(p ? `${label} · #${p.number} ${p.name}` : label, tone)
+    // aksi berikutnya wajib memilih pemain lagi
+    setSelected(null)
   }
 
   const toggleClock = () => {
@@ -179,20 +182,29 @@ export function OperatorPage() {
         showToast('Undo skor', 'warn')
         return
       }
-      if (!selected) return
+      const actionKey = ['1', '2', '3', 'f', 'F'].includes(e.key)
+      if (!actionKey) return
+      if (!selected) {
+        showToast('Pilih pemain dulu', 'warn')
+        return
+      }
+      const team = selected.teamId === 'home' ? s.home : s.away
+      const p = team.players.find((x) => x.id === selected.playerId)
+      const who = p ? ` · #${p.number} ${p.name}` : ''
       if (e.key === '1') {
         s.recordScore(selected.teamId, 1, selected.playerId)
-        showToast('+1 FT')
+        showToast(`+1 FT${who}`)
       } else if (e.key === '2') {
         s.recordScore(selected.teamId, 2, selected.playerId)
-        showToast('+2')
+        showToast(`+2${who}`)
       } else if (e.key === '3') {
         s.recordScore(selected.teamId, 3, selected.playerId)
-        showToast('+3')
-      } else if (e.key === 'f' || e.key === 'F') {
+        showToast(`+3${who}`)
+      } else {
         s.recordFoul(selected.teamId, selected.playerId)
-        showToast('Foul', 'err')
+        showToast(`Foul${who}`, 'err')
       }
+      setSelected(null)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -336,7 +348,24 @@ export function OperatorPage() {
   }
 
   /** Skor dari kartu tim: masuk ke pemain terpilih, atau tanya siapa pencetaknya. */
+  /** Poin tim yang tercatat tanpa pemain (data lama / edit skor). */
+  const teamOnlyPoints = (teamId: TeamId) => {
+    const team = teamId === 'home' ? state.home : state.away
+    const total = teamId === 'home' ? homeScore : awayScore
+    return total - team.players.reduce((s, p) => s + (state.playerStats[p.id]?.pts ?? 0), 0)
+  }
+
+  /**
+   * Skor dari kartu tim: kalau tim punya daftar pemain, pemain wajib dipilih
+   * (langsung bila sudah dipilih, kalau belum lewat jendela pilih pemain).
+   * Tim tanpa daftar pemain langsung dicatat ke skor tim.
+   */
   const teamScoreAction = (teamId: TeamId, points: 1 | 2 | 3 | -1) => {
+    const team = teamId === 'home' ? state.home : state.away
+    if (team.players.length === 0) {
+      applyTeamScore(teamId, points, null)
+      return
+    }
     if (selected?.teamId === teamId) {
       applyTeamScore(teamId, points, selected.playerId)
       return
@@ -356,6 +385,7 @@ export function OperatorPage() {
       showToast(`${who} +${points}${points === 1 ? ' FT' : ''}`)
     }
     setScorePicker(null)
+    setSelected(null)
   }
 
   const editScore = (teamId: TeamId) => {
@@ -561,13 +591,18 @@ export function OperatorPage() {
                 })}
               </div>
               <div className="score-picker-actions">
-                <button
-                  type="button"
-                  className="btn btn-ghost"
-                  onClick={() => applyTeamScore(scorePicker.teamId, scorePicker.points, null)}
-                >
-                  {minus ? 'Koreksi skor tim saja' : 'Tanpa pemain (skor tim)'}
-                </button>
+                {minus && teamOnlyPoints(scorePicker.teamId) > 0 ? (
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    title="Kurangi dari poin tim yang belum tercatat per pemain"
+                    onClick={() => applyTeamScore(scorePicker.teamId, -1, null)}
+                  >
+                    Kurangi dari poin tim ({teamOnlyPoints(scorePicker.teamId)})
+                  </button>
+                ) : (
+                  <span className="muted picker-hint">Pilih pemain yang mencetak poin.</span>
+                )}
                 <button type="button" className="btn btn-ghost" onClick={() => setScorePicker(null)}>
                   Batal
                 </button>

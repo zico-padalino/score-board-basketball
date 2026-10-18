@@ -4493,6 +4493,11 @@ button {
   flex-wrap: wrap;
   gap: 0.5rem;
   justify-content: space-between;
+  align-items: center;
+}
+
+.picker-hint {
+  font-size: 0.82rem;
 }
 
 .timing-warn {
