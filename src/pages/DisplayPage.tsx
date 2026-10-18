@@ -270,8 +270,8 @@ export function DisplayPage() {
             </thead>
             <tbody>
               <tr>
-                <td className="team-cell" style={{ color: home.color }}>
-                  {home.shortName}
+                <td className="team-cell" style={{ ['--team' as string]: home.color }} title={home.name}>
+                  {home.name}
                 </td>
                 {PERIODS.map((p) => (
                   <td key={p} className={period === p ? 'now' : ''}>
@@ -283,8 +283,8 @@ export function DisplayPage() {
                 )}
               </tr>
               <tr>
-                <td className="team-cell" style={{ color: away.color }}>
-                  {away.shortName}
+                <td className="team-cell" style={{ ['--team' as string]: away.color }} title={away.name}>
+                  {away.name}
                 </td>
                 {PERIODS.map((p) => (
                   <td key={p} className={period === p ? 'now' : ''}>
@@ -343,7 +343,7 @@ export function DisplayPage() {
         {lastScore && lastTeam ? (
           <div className="ticker-track" key={lastScore.id}>
             <span className="ticker-badge">LAST PLAY</span>
-            <span className="ticker-team" style={{ color: lastTeam.color }}>
+            <span className="ticker-team" style={{ ['--team' as string]: lastTeam.color }}>
               {lastTeam.name}
             </span>
             <span className="ticker-player">
