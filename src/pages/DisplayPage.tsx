@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { TeamLogo } from '../components/TeamLogo'
+import { setCountdownSound, useCountdownSoundEnabled } from '../hooks/useCountdownVoice'
 import { courtLabel, gameId } from '../lib/gameRoom'
 import { useFullscreen } from '../hooks/useFullscreen'
 import { useGameStore } from '../store/gameStore'
@@ -29,6 +30,7 @@ export function DisplayPage() {
   const periods = periodsOf(config)
   const PERIODS = regularPeriods(periods)
   const state = useGameStore()
+  const soundOn = useCountdownSoundEnabled()
 
   const homeScore = teamScore(scoreEvents, 'home')
   const awayScore = teamScore(scoreEvents, 'away')
@@ -143,6 +145,17 @@ export function DisplayPage() {
       </div>
 
       <div className="display-controls no-print">
+        <button
+          type="button"
+          className={`display-sound-btn ${soundOn ? 'on' : 'off'}`}
+          onClick={() => {
+            void unlockAudio()
+            setCountdownSound(!soundOn)
+          }}
+          title="Suara hitung mundur 10 detik terakhir"
+        >
+          Suara<span className="sound-state"> {soundOn ? 'ON' : 'OFF'}</span>
+        </button>
         <button
           type="button"
           className="display-fs-btn"

@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { TeamLogo } from '../components/TeamLogo'
+import { setCountdownSound, useCountdownSoundEnabled } from '../hooks/useCountdownVoice'
 import { snapshot } from '../hooks/useScoreboardSync'
+import { unlockAudio } from '../utils/buzzer'
 import { courtLabel, gameId } from '../lib/gameRoom'
 import { finalizeMatch } from '../lib/tournamentApi'
 import { useGameStore } from '../store/gameStore'
@@ -85,6 +87,7 @@ export function OperatorPage() {
 
   const [savingResult, setSavingResult] = useState(false)
   const [adjustOpen, setAdjustOpen] = useState(false)
+  const soundOn = useCountdownSoundEnabled()
 
   const finish = async () => {
     const match = state.match
@@ -588,6 +591,18 @@ export function OperatorPage() {
               onClick={() => state.setClockMs(Math.max(0, state.clockMs - 1000))}
             >
               −1s
+            </button>
+            <button
+              type="button"
+              className={`btn btn-sm btn-ghost op-secondary op-sound ${soundOn ? 'on' : ''}`}
+              title="Suara hitung mundur 10 detik terakhir di perangkat ini"
+              onClick={() => {
+                void unlockAudio()
+                setCountdownSound(!soundOn)
+                showToast(soundOn ? 'Suara hitung mundur mati' : 'Suara hitung mundur aktif')
+              }}
+            >
+              Suara {soundOn ? 'ON' : 'OFF'}
             </button>
             <button
               type="button"

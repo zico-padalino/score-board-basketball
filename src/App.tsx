@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { PublicLayout } from './components/PublicLayout'
+import { useCountdownVoice } from './hooks/useCountdownVoice'
 import { useScoreboardSync } from './hooks/useScoreboardSync'
 import { BoxScorePage } from './pages/BoxScorePage'
 import { DisplayPage } from './pages/DisplayPage'
@@ -15,6 +16,7 @@ import { TournamentsPage } from './pages/TournamentsPage'
 
 function DisplayRoute() {
   useScoreboardSync('receive')
+  useCountdownVoice()
   return <DisplayPage />
 }
 

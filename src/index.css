@@ -1976,8 +1976,13 @@ button {
     display: inline-flex;
   }
 
-  .op-toolbar.no-shot .op-reset {
+  .op-toolbar:not(.no-shot) .op-reset {
     grid-column: 1 / -1;
+  }
+
+  .op-toolbar.no-shot .op-sound,
+  .op-toolbar.no-shot .op-reset {
+    grid-column: span 2;
   }
 
   /* Toast di atas dock supaya tidak menutupi jam */
@@ -2451,6 +2456,49 @@ button {
   background: var(--orange);
 }
 
+.display-sound-btn {
+  margin-left: auto;
+  padding: 0.5rem 0.85rem;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--display-ink);
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.display-sound-btn.on {
+  background: rgba(42, 157, 143, 0.55);
+}
+
+.display-sound-btn + .display-fs-btn {
+  margin-left: 0;
+}
+
+.display-live-pill {
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .display-sound-btn .sound-state,
+  .display-court {
+    display: none;
+  }
+
+  .display-sound-btn,
+  .display-fs-btn {
+    padding: 0.45rem 0.65rem;
+    font-size: 0.68rem;
+  }
+
+  .display.show-controls .display-top,
+  .display:not(.is-fullscreen) .display-top {
+    padding-right: 10.5rem;
+  }
+}
+
 .display.is-fullscreen {
   padding: clamp(0.75rem, 2vh, 1.5rem);
   height: 100%;
@@ -2484,7 +2532,7 @@ button {
 
 .display.show-controls .display-top,
 .display:not(.is-fullscreen) .display-top {
-  padding-right: 8.5rem;
+  padding-right: 15.5rem;
 }
 
 .display-brand {
@@ -3053,7 +3101,7 @@ button {
   }
 
   .display-top {
-    padding-right: 7.5rem;
+    padding-right: 13rem;
   }
 
   .display-brand .brand-orb {

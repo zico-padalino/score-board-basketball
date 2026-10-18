@@ -14,8 +14,17 @@ function getCtx(): AudioContext | null {
   return ctx
 }
 
+let speechUnlocked = false
+
 /** Unlock audio after a user gesture (click/tap). Call once from UI. */
 export async function unlockAudio() {
+  if (!speechUnlocked && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    // iOS Safari baru mengizinkan suara setelah satu utterance dari gesture pengguna
+    const warmup = new SpeechSynthesisUtterance(' ')
+    warmup.volume = 0
+    window.speechSynthesis.speak(warmup)
+    speechUnlocked = true
+  }
   const audio = getCtx()
   if (!audio) return
   if (audio.state === 'suspended') {
@@ -25,6 +34,40 @@ export async function unlockAudio() {
       /* ignore */
     }
   }
+}
+
+function pickVoice(): SpeechSynthesisVoice | null {
+  const voices = window.speechSynthesis.getVoices()
+  return (
+    voices.find((v) => v.lang.toLowerCase().startsWith('id')) ??
+    voices.find((v) => v.lang.toLowerCase().startsWith('ms')) ??
+    null
+  )
+}
+
+/** Hitung mundur 10 detik terakhir: ucapkan angka, atau beep bila suara tidak tersedia. */
+export function announceCountdown(n: number) {
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    const synth = window.speechSynthesis
+    const voice = pickVoice()
+    synth.cancel()
+    const u = new SpeechSynthesisUtterance(String(n))
+    u.lang = voice?.lang ?? 'id-ID'
+    if (voice) u.voice = voice
+    u.rate = 1.15
+    u.volume = 1
+    synth.speak(u)
+    return
+  }
+  const audio = getCtx()
+  if (!audio) return
+  void audio.resume()
+  tone(audio, {
+    frequency: n <= 3 ? 1046 : 784,
+    duration: 0.14,
+    type: 'sine',
+    gain: 0.3,
+  })
 }
 
 function broadcast(kind: 'shot' | 'period') {

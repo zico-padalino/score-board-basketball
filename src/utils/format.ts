@@ -5,8 +5,9 @@ export function formatClock(ms: number): string {
   const minutes = Math.floor(totalSeconds / 60)
   const seconds = totalSeconds % 60
   if (minutes === 0 && ms < 60_000) {
-    const tenths = Math.floor((Math.max(0, ms) % 1000) / 100)
-    return `${seconds}.${tenths}`
+    const safe = Math.max(0, ms)
+    const tenths = Math.floor((safe % 1000) / 100)
+    return `${Math.floor(safe / 1000)}.${tenths}`
   }
   return `${minutes}:${seconds.toString().padStart(2, '0')}`
 }

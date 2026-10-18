@@ -1,4 +1,5 @@
 import { Navigate, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { useCountdownVoice } from '../hooks/useCountdownVoice'
 import { useGameClock } from '../hooks/useGameClock'
 import { useScoreboardSync } from '../hooks/useScoreboardSync'
 import { signOut, useAuth } from '../lib/auth'
@@ -42,6 +43,7 @@ function AdminShell({ email }: { email?: string }) {
 
   useGameClock(true)
   useScoreboardSync('broadcast')
+  useCountdownVoice()
 
   return (
     <div className={`app-shell route-${location.pathname.split('/')[2] || 'setup'}`}>
