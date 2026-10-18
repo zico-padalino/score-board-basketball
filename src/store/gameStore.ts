@@ -122,7 +122,10 @@ interface GameActions {
   undoLastScore: () => void
   undoLastEvent: () => void
   finishGame: () => void
-  adjustScore: (teamId: TeamId, delta: number) => void
+  /** Koreksi skor tim (+/−) tanpa mengubah statistik pemain; skor tidak bisa di bawah 0. */
+  correctScore: (teamId: TeamId, delta: number) => void
+  /** Ubah skor tim langsung ke angka tertentu (lewat koreksi). */
+  setTeamScore: (teamId: TeamId, value: number) => void
 }
 
 type Store = GameState & GameActions
@@ -606,14 +609,35 @@ export const useGameStore = create<Store>()(
       finishGame: () =>
         set({ status: 'finished', clockRunning: false }),
 
-      adjustScore: (teamId, delta) => {
-        if (delta === 0) return
-        const points = Math.abs(delta) as 1 | 2 | 3
-        if (delta > 0 && (points === 1 || points === 2 || points === 3)) {
-          get().recordScore(teamId, points, null)
-        } else if (delta < 0) {
-          get().undoLastScore()
-        }
+      correctScore: (teamId, delta) => {
+        const state = get()
+        const current = state.scoreEvents
+          .filter((e) => e.teamId === teamId)
+          .reduce((sum, e) => sum + e.points, 0)
+        const points = Math.max(-current, Math.round(delta))
+        if (points === 0) return
+        set({
+          scoreEvents: [
+            ...state.scoreEvents,
+            {
+              id: uid('adj'),
+              teamId,
+              playerId: null,
+              points,
+              period: state.period,
+              clockMs: state.clockMs,
+              kind: 'adj',
+              timestamp: Date.now(),
+            },
+          ],
+        })
+      },
+
+      setTeamScore: (teamId, value) => {
+        const current = get()
+          .scoreEvents.filter((e) => e.teamId === teamId)
+          .reduce((sum, e) => sum + e.points, 0)
+        get().correctScore(teamId, Math.max(0, Math.round(value)) - current)
       },
     }),
     {

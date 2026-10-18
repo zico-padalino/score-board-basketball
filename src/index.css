@@ -877,6 +877,14 @@ button {
   line-height: 0.9;
   letter-spacing: 0.02em;
   color: var(--team-color, var(--ink));
+  padding: 0 0.2rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.op-team-score:hover {
+  background: rgba(15, 41, 61, 0.06);
 }
 
 .pos-pill,
@@ -946,6 +954,14 @@ button {
 
 .op-team-quick .btn {
   min-height: 38px;
+}
+
+.op-team-quick .op-edit-score {
+  grid-column: span 2;
+}
+
+.op-team-quick .op-minus {
+  color: var(--danger);
 }
 
 .op-section-label {

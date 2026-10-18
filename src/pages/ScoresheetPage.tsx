@@ -193,7 +193,7 @@ export function ScoresheetPage() {
                     <li key={e.id}>
                       <span>
                         {label(e.period)} {formatClock(e.clockMs)} · #
-                        {player?.number ?? '—'} +{e.points}
+                        {e.kind === 'adj' ? 'koreksi' : (player?.number ?? '—')} {e.points > 0 ? '+' + e.points : e.points}
                       </span>
                       <span>{running}</span>
                     </li>
@@ -218,7 +218,7 @@ export function ScoresheetPage() {
                     <li key={e.id}>
                       <span>
                         {label(e.period)} {formatClock(e.clockMs)} · #
-                        {player?.number ?? '—'} +{e.points}
+                        {e.kind === 'adj' ? 'koreksi' : (player?.number ?? '—')} {e.points > 0 ? '+' + e.points : e.points}
                       </span>
                       <span>{running}</span>
                     </li>

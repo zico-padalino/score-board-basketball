@@ -347,11 +347,15 @@ export function DisplayPage() {
               {lastTeam.name}
             </span>
             <span className="ticker-player">
-              {lastPlayer
-                ? `#${lastPlayer.number} ${lastPlayer.name}`
-                : 'Team score'}
+              {lastScore.kind === 'adj'
+                ? 'Koreksi skor'
+                : lastPlayer
+                  ? `#${lastPlayer.number} ${lastPlayer.name}`
+                  : 'Team score'}
             </span>
-            <strong className="ticker-pts">+{lastScore.points}</strong>
+            <strong className="ticker-pts">
+              {lastScore.points > 0 ? `+${lastScore.points}` : lastScore.points}
+            </strong>
             <span className="ticker-when">
               {periodLabel(lastScore.period, periods)} · {formatClock(lastScore.clockMs)}
             </span>

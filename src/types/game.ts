@@ -68,7 +68,8 @@ export interface ScoreEvent {
   points: number
   period: Period
   clockMs: number
-  kind: '1' | '2' | '3'
+  /** 'adj' = koreksi skor tim oleh operator (bisa negatif, tanpa pemain). */
+  kind: '1' | '2' | '3' | 'adj'
   timestamp: number
 }
 

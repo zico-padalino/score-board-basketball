@@ -330,6 +330,21 @@ export function OperatorPage() {
     )
   }
 
+  const editScore = (teamId: TeamId) => {
+    const team = teamId === 'home' ? state.home : state.away
+    const current = teamId === 'home' ? homeScore : awayScore
+    const input = window.prompt(`Skor ${team.name} (sekarang ${current}):`, String(current))
+    if (input === null) return
+    const value = Number.parseInt(input.trim(), 10)
+    if (!Number.isFinite(value) || value < 0) {
+      showToast('Skor harus angka 0 atau lebih', 'err')
+      return
+    }
+    if (value === current) return
+    state.setTeamScore(teamId, value)
+    showToast(`Skor ${team.shortName} jadi ${value}`, 'warn')
+  }
+
   const renderTeamCol = (teamId: TeamId) => {
     const team = teamId === 'home' ? state.home : state.away
     const scoreVal = teamId === 'home' ? homeScore : awayScore
@@ -357,7 +372,14 @@ export function OperatorPage() {
               <h2>{team.name}</h2>
             </div>
           </div>
-          <div className="op-team-score">{scoreVal}</div>
+          <button
+            type="button"
+            className="op-team-score"
+            title="Ketuk untuk edit skor"
+            onClick={() => editScore(teamId)}
+          >
+            {scoreVal}
+          </button>
         </header>
 
         <div className="op-team-meta">
@@ -414,6 +436,36 @@ export function OperatorPage() {
             }}
           >
             +3
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm btn-ghost op-minus"
+            disabled={scoreVal <= 0}
+            title="Kurangi 1 poin (koreksi skor tim)"
+            onClick={() => {
+              state.correctScore(teamId, -1)
+              showToast(`${team.shortName} −1`, 'warn')
+            }}
+          >
+            −1
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm btn-ghost"
+            title="Tambah 1 poin (koreksi skor tim)"
+            onClick={() => {
+              state.correctScore(teamId, 1)
+              showToast(`${team.shortName} +1`)
+            }}
+          >
+            +1
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm btn-ghost op-edit-score"
+            onClick={() => editScore(teamId)}
+          >
+            Edit skor
           </button>
         </div>
 
