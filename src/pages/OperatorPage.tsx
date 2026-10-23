@@ -66,6 +66,8 @@ export function OperatorPage() {
             'fg3_made',
             'ft_made',
             'foul_personal',
+            'foul_technical',
+            'foul_unsportsmanlike',
             'timeout',
             'ast',
             'reb_off',
@@ -223,6 +225,8 @@ export function OperatorPage() {
       fg3_made: '+3',
       ft_made: '+1',
       foul_personal: 'FOUL',
+      foul_technical: 'FOUL T',
+      foul_unsportsmanlike: 'FOUL U',
       timeout: 'TIMEOUT',
       ast: 'AST',
       reb_off: 'OREB',
@@ -482,6 +486,20 @@ export function OperatorPage() {
             <span className="meta-label">Team fouls</span>
             {renderFoulDots(Math.min(fouls, 5))}
             <strong>{fouls}</strong>
+            <button
+              type="button"
+              className="btn btn-sm btn-ghost op-foul-minus"
+              aria-label={`Kurangi foul ${team.name}`}
+              title="Hapus foul terakhir di babak ini"
+              disabled={fouls === 0}
+              onClick={() => {
+                if (useGameStore.getState().undoLastFoul(teamId, state.period)) {
+                  showToast(`Foul terakhir ${team.shortName} dikurangi`, 'warn')
+                }
+              }}
+            >
+              −
+            </button>
           </div>
           <div>
             <span className="meta-label">Timeout</span>
@@ -1283,6 +1301,11 @@ export function OperatorPage() {
                   const p = findPlayer(e.teamId, e.playerId)
                   const team = e.teamId === 'home' ? state.home : state.away
                   const isAdjust = e.type === 'score_adjust'
+                  const isFoul = [
+                    'foul_personal',
+                    'foul_technical',
+                    'foul_unsportsmanlike',
+                  ].includes(e.type)
                   const isScore =
                     isAdjust || e.type === 'fg2_made' || e.type === 'fg3_made' || e.type === 'ft_made'
                   const adj = e.points ?? 0
@@ -1306,6 +1329,27 @@ export function OperatorPage() {
                         <span className="recent-pts">{state.playerStats[p.id]?.pts ?? 0} pts</span>
                       )}
                       <span className="muted">{periodLabel(e.period, periodsOf(state.config))}</span>
+                      {isFoul && (
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-ghost recent-foul-remove"
+                          title="Hapus foul ini dan koreksi statistik pemain serta tim"
+                          onClick={() => {
+                            if (
+                              !window.confirm(
+                                `Hapus foul ${p ? `#${p.number} ${p.name}` : state[e.teamId].name} dari ${periodLabel(e.period, periodsOf(state.config))}?`,
+                              )
+                            ) {
+                              return
+                            }
+                            if (useGameStore.getState().removeFoul(e.id)) {
+                              showToast('Foul dan statistik terkait dikoreksi', 'warn')
+                            }
+                          }}
+                        >
+                          Hapus foul
+                        </button>
+                      )}
                     </li>
                   )
                 })}

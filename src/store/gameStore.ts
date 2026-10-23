@@ -112,6 +112,8 @@ interface GameActions {
     playerId: string,
     foulType?: 'foul_personal' | 'foul_technical' | 'foul_unsportsmanlike',
   ) => void
+  removeFoul: (eventId: string) => boolean
+  undoLastFoul: (teamId: TeamId, period: Period) => boolean
   recordTimeout: (teamId: TeamId) => void
   togglePlayerActive: (teamId: TeamId, playerId: string) => boolean
   substitutePlayers: (
@@ -483,6 +485,50 @@ export const useGameStore = create<Store>()(
             },
           ],
         })
+      },
+
+      removeFoul: (eventId) => {
+        const state = get()
+        const foul = state.events.find((event) => event.id === eventId)
+        if (
+          !foul ||
+          !['foul_personal', 'foul_technical', 'foul_unsportsmanlike'].includes(foul.type)
+        ) {
+          return false
+        }
+
+        const team = { ...state[foul.teamId] }
+        const periodFouls = { ...team.periodFouls }
+        const count = Math.max(0, (periodFouls[foul.period] ?? 0) - 1)
+        if (count === 0) delete periodFouls[foul.period]
+        else periodFouls[foul.period] = count
+        team.periodFouls = periodFouls
+
+        let playerStats = state.playerStats
+        if (foul.playerId && playerStats[foul.playerId]) {
+          const stats = { ...playerStats[foul.playerId] }
+          stats.pf = Math.max(0, stats.pf - 1)
+          playerStats = { ...playerStats, [foul.playerId]: stats }
+        }
+
+        set({
+          [foul.teamId]: team,
+          playerStats,
+          events: state.events.filter((event) => event.id !== eventId),
+        })
+        return true
+      },
+
+      undoLastFoul: (teamId, period) => {
+        const foul = [...get().events]
+          .reverse()
+          .find(
+            (event) =>
+              event.teamId === teamId &&
+              event.period === period &&
+              ['foul_personal', 'foul_technical', 'foul_unsportsmanlike'].includes(event.type),
+          )
+        return foul ? get().removeFoul(foul.id) : false
       },
 
       recordTimeout: (teamId) => {
