@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { standingsByGroup } from '../../lib/tournament'
 import { insertMatches } from '../../lib/tournamentApi'
-import type { Match, TournamentTeam } from '../../types/tournament'
+import type { Match, MatchStage, Tournament, TournamentTeam } from '../../types/tournament'
 import { fromLocalInput, toLocalInput } from '../../utils/datetime'
 
 const KINDS = [
@@ -16,6 +16,7 @@ type KindId = (typeof KINDS)[number]['id']
 /** Tambah laga final / tambahan dengan memilih sendiri tim yang bertanding. */
 export function AddMatchPanel({
   tournamentId,
+  format,
   teams,
   matches,
   matchMinutes,
@@ -23,6 +24,7 @@ export function AddMatchPanel({
   onAdded,
 }: {
   tournamentId: string
+  format: Tournament['format']
   teams: TournamentTeam[]
   matches: Match[]
   matchMinutes: number
@@ -50,6 +52,8 @@ export function AddMatchPanel({
   }, [matches, matchMinutes, breakMinutes])
 
   const lastVenue = [...matches].reverse().find((m) => m.venue)?.venue ?? ''
+  const allowedStages: MatchStage[] =
+    format === 'group' ? ['group'] : format === 'knockout' ? ['knockout'] : ['group', 'knockout']
 
   const pickFor = (kind: KindId) => {
     const ranks = KINDS.find((k) => k.id === kind)?.ranks ?? [0, 1]
@@ -57,6 +61,7 @@ export function AddMatchPanel({
   }
 
   const [open, setOpen] = useState(false)
+  const [stage, setStage] = useState<MatchStage>(format === 'group' ? 'group' : 'knockout')
   const [kind, setKind] = useState<KindId>('final')
   const [customName, setCustomName] = useState('')
   const [homeId, setHomeId] = useState('')
@@ -68,6 +73,7 @@ export function AddMatchPanel({
 
   const start = () => {
     const [h, a] = pickFor('final')
+    setStage(format === 'group' ? 'group' : 'knockout')
     setKind('final')
     setHomeId(h)
     setAwayId(a)
@@ -96,8 +102,19 @@ export function AddMatchPanel({
       setError('Tim home dan away tidak boleh sama')
       return
     }
-    const knockout = matches.filter((m) => m.stage === 'knockout')
-    const round = Math.max(0, ...knockout.map((m) => m.round)) + (kind === 'final' ? 1 : 0) || 1
+    const homeTeam = teams.find((t) => t.id === homeId)
+    const awayTeam = teams.find((t) => t.id === awayId)
+    const groupName = homeTeam?.group_name || awayTeam?.group_name || 'A'
+    if (stage === 'group' && (homeTeam?.group_name || 'A') !== (awayTeam?.group_name || 'A')) {
+      setError('Laga grup hanya bisa mempertemukan tim dari grup yang sama')
+      return
+    }
+    const stageMatches = matches.filter(
+      (m) =>
+        m.stage === stage &&
+        (stage !== 'group' || (m.group_name || 'A') === groupName),
+    )
+    const round = Math.max(0, ...stageMatches.map((m) => m.round)) + (stage === 'knockout' && kind === 'final' ? 1 : 0) || 1
     setBusy(true)
     setError(null)
     try {
@@ -105,11 +122,11 @@ export function AddMatchPanel({
         {
           id: crypto.randomUUID(),
           tournament_id: tournamentId,
-          stage: 'knockout',
-          group_name: null,
+          stage,
+          group_name: stage === 'group' ? groupName : null,
           round,
-          round_label: label,
-          bracket_index: knockout.filter((m) => m.round === round).length,
+          round_label: stage === 'group' ? `Grup ${groupName} · Laga tambahan` : label,
+          bracket_index: stageMatches.filter((m) => m.round === round).length,
           home_team_id: homeId,
           away_team_id: awayId,
           next_match_id: null,
@@ -140,14 +157,13 @@ export function AddMatchPanel({
     return (
       <section className="panel add-match">
         <div className="panel-head">
-          <h3>Laga final</h3>
+          <h3>Atur pertandingan</h3>
           <button type="button" className="btn btn-primary" disabled={teams.length < 2} onClick={start}>
-            + Tambah laga final
+            + Tambah pertandingan
           </button>
         </div>
         <p className="muted">
-          Tambahkan Final, perebutan juara 3, atau laga lain, lalu pilih sendiri tim yang bertanding.
-          Laga ini tidak dihitung ke klasemen grup.
+          Tambahkan laga secara manual, pilih siapa melawan siapa, lalu tentukan jadwal dan lapangannya.
         </p>
       </section>
     )
@@ -155,20 +171,35 @@ export function AddMatchPanel({
 
   return (
     <section className="panel add-match">
-      <h3>Tambah laga final</h3>
+      <h3>Tambah pertandingan</h3>
       {error && <p className="logo-error">{error}</p>}
       <div className="grid-3">
-        <div className="field">
-          <label htmlFor="amKind">Jenis laga</label>
-          <select id="amKind" value={kind} onChange={(e) => changeKind(e.target.value as KindId)}>
-            {KINDS.map((k) => (
-              <option key={k.id} value={k.id}>
-                {k.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        {kind === 'custom' && (
+        {allowedStages.length > 1 && (
+          <div className="field">
+            <label htmlFor="amStage">Babak</label>
+            <select
+              id="amStage"
+              value={stage}
+              onChange={(e) => setStage(e.target.value as MatchStage)}
+            >
+              <option value="group">Grup</option>
+              <option value="knockout">Gugur</option>
+            </select>
+          </div>
+        )}
+        {stage === 'knockout' && (
+          <div className="field">
+            <label htmlFor="amKind">Jenis laga</label>
+            <select id="amKind" value={kind} onChange={(e) => changeKind(e.target.value as KindId)}>
+              {KINDS.map((k) => (
+                <option key={k.id} value={k.id}>
+                  {k.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        {stage === 'knockout' && kind === 'custom' && (
           <div className="field">
             <label htmlFor="amName">Nama laga</label>
             <input
@@ -214,7 +245,8 @@ export function AddMatchPanel({
       </div>
       {homeId && awayId && homeId !== awayId && (
         <p className="timing-preview">
-          <strong>{label}</strong>: {teamName(homeId)} vs {teamName(awayId)}
+          <strong>{stage === 'group' ? `Grup ${teams.find((t) => t.id === homeId)?.group_name || 'A'}` : label}</strong>
+          : {teamName(homeId)} vs {teamName(awayId)}
         </p>
       )}
       <div className="btn-row">

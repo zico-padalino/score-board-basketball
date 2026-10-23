@@ -420,16 +420,15 @@ export function ScheduleTab({
         </p>
       </details>
 
-      {matches.length > 0 && (
-        <AddMatchPanel
-          tournamentId={tournament.id}
-          teams={teams}
-          matches={matches}
-          matchMinutes={matchMinutesOf(settings)}
-          breakMinutes={settings.breakMinutes ?? 15}
-          onAdded={reload}
-        />
-      )}
+      <AddMatchPanel
+        tournamentId={tournament.id}
+        format={tournament.format}
+        teams={teams}
+        matches={matches}
+        matchMinutes={matchMinutesOf(settings)}
+        breakMinutes={settings.breakMinutes ?? 15}
+        onAdded={reload}
+      />
 
       {tournament.format === 'group_knockout' && (
         <div className="seg-tabs">
@@ -448,7 +447,10 @@ export function ScheduleTab({
 
       {visible.length === 0 && (
         <section className="panel">
-          <p className="muted">Belum ada jadwal. Tambahkan tim lalu klik "Buat jadwal".</p>
+          <p className="muted">
+            Belum ada jadwal. Buat jadwal otomatis, atau tambahkan pertandingan manual untuk memilih
+            sendiri lawan dan waktunya.
+          </p>
         </section>
       )}
 

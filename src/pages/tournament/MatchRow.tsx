@@ -106,6 +106,17 @@ export function MatchRow({
     if (teamsChanged && finished && !window.confirm('Ganti tim pada laga yang sudah selesai? Klasemen akan dihitung ulang.')) {
       return
     }
+    const selectedHome = teams.find((team) => team.id === homeId)
+    const selectedAway = teams.find((team) => team.id === awayId)
+    if (
+      match.stage === 'group' &&
+      selectedHome &&
+      selectedAway &&
+      (selectedHome.group_name || 'A') !== (selectedAway.group_name || 'A')
+    ) {
+      window.alert('Laga grup hanya bisa mempertemukan tim dari grup yang sama')
+      return
+    }
     setBusy(true)
     try {
       await updateMatch(match.id, {
@@ -113,6 +124,9 @@ export function MatchRow({
         venue: venue.trim(),
         home_team_id: homeId || null,
         away_team_id: awayId || null,
+        ...(match.stage === 'group' && selectedHome
+          ? { group_name: selectedHome.group_name || 'A' }
+          : {}),
       })
       if (scoreChanged) {
         const store = useGameStore.getState()
@@ -199,7 +213,7 @@ export function MatchRow({
           className="btn btn-sm btn-ghost"
           onClick={() => (editing ? setEditing(false) : startEdit())}
         >
-          Edit
+          Jadwal & lawan
         </button>
       </div>
 
