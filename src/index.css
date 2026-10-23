@@ -448,30 +448,6 @@ button {
   border: 3px solid rgba(255, 255, 255, 0.35);
 }
 
-.team-logo.fallback {
-  color: #fff;
-  font-family: var(--font-display);
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  border: 2px solid rgba(255, 255, 255, 0.35);
-}
-
-.team-logo.fallback.sm {
-  font-size: 0.85rem;
-}
-
-.team-logo.fallback.md {
-  font-size: 1.1rem;
-}
-
-.team-logo.fallback.lg {
-  font-size: 1.4rem;
-}
-
-.team-logo.fallback.xl {
-  font-size: clamp(1.6rem, 3vw, 2.2rem);
-}
-
 .op-team-title {
   display: flex;
   align-items: center;

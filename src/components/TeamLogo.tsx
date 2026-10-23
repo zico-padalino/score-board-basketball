@@ -9,6 +9,8 @@ const sizes: Record<Size, string> = {
   xl: 'team-logo xl',
 }
 
+const builtInPlaceholders = new Set(['/logos/garuda.svg', '/logos/rajawali.svg'])
+
 export function TeamLogo({
   team,
   size = 'md',
@@ -18,26 +20,14 @@ export function TeamLogo({
   size?: Size
   className?: string
 }) {
-  const initials = (team.shortName || team.name || '?').slice(0, 2).toUpperCase()
-
-  if (team.logo) {
-    return (
-      <img
-        className={`${sizes[size]} ${className}`.trim()}
-        src={team.logo}
-        alt={`Logo ${team.name}`}
-        draggable={false}
-      />
-    )
-  }
+  if (!team.logo || builtInPlaceholders.has(team.logo)) return null
 
   return (
-    <span
-      className={`${sizes[size]} fallback ${className}`.trim()}
-      style={{ background: team.color }}
-      aria-label={team.name}
-    >
-      {initials}
-    </span>
+    <img
+      className={`${sizes[size]} ${className}`.trim()}
+      src={team.logo}
+      alt={`Logo ${team.name}`}
+      draggable={false}
+    />
   )
 }

@@ -10,9 +10,6 @@ import type { Player } from '../types/game'
 import { PERIOD_OPTIONS } from '../types/tournament'
 import { uid } from '../utils/format'
 
-const DUMMY_HOME = '/logos/garuda.svg'
-const DUMMY_AWAY = '/logos/rajawali.svg'
-
 function blankRoster(prefix: string): Player[] {
   return Array.from({ length: 12 }, (_, i) => ({
     id: uid(`${prefix}_p`),
@@ -50,8 +47,8 @@ export function SetupPage() {
   const [awayName, setAwayName] = useState('Rajawali')
   const [homeColor, setHomeColor] = useState('#e85d04')
   const [awayColor, setAwayColor] = useState('#1d3557')
-  const [homeLogo, setHomeLogo] = useState(DUMMY_HOME)
-  const [awayLogo, setAwayLogo] = useState(DUMMY_AWAY)
+  const [homeLogo, setHomeLogo] = useState('')
+  const [awayLogo, setAwayLogo] = useState('')
   const [periodMinutes, setPeriodMinutes] = useState(10)
   const [periods, setPeriods] = useState(4)
   const [shotClock, setShotClock] = useState(true)
@@ -119,17 +116,12 @@ export function SetupPage() {
     side: 'home' | 'away',
     logo: string,
     name: string,
-    color: string,
     fileRef: RefObject<HTMLInputElement | null>,
-    dummy: string,
   ) => (
     <div className="logo-field">
       <label>Logo tim</label>
       <div className="logo-picker">
-        <TeamLogo
-          team={{ name, color, logo, shortName: name.slice(0, 3) }}
-          size="lg"
-        />
+        <TeamLogo team={{ name, color: '', logo, shortName: name.slice(0, 3) }} size="lg" />
         <div className="logo-actions">
           <button
             type="button"
@@ -138,17 +130,6 @@ export function SetupPage() {
             onClick={() => fileRef.current?.click()}
           >
             {logoUploading === side ? 'Mengupload…' : 'Upload logo'}
-          </button>
-          <button
-            type="button"
-            className="btn btn-sm btn-ghost"
-            onClick={() => {
-              if (side === 'home') setHomeLogo(dummy)
-              else setAwayLogo(dummy)
-              setLogoError(null)
-            }}
-          >
-            Pakai dummy
           </button>
           <button
             type="button"
@@ -170,7 +151,7 @@ export function SetupPage() {
               e.target.value = ''
             }}
           />
-          <p className="muted logo-hint">PNG / JPG / WEBP / SVG · maks 1.5 MB</p>
+          <p className="muted logo-hint">Opsional · PNG / JPG / WEBP / SVG · maks 1.5 MB</p>
         </div>
       </div>
     </div>
@@ -182,8 +163,7 @@ export function SetupPage() {
         <div>
           <h2>Siapkan pertandingan</h2>
           <p>
-            Atur nama tim, logo, roster, dan durasi kuarter. Logo dummy Garuda
-            &amp; Rajawali sudah siap — atau upload logo sendiri.
+            Atur nama tim, logo opsional, roster, dan durasi kuarter.
           </p>
         </div>
         {status !== 'setup' && (
@@ -240,9 +220,7 @@ export function SetupPage() {
             'home',
             homeLogo,
             homeName,
-            homeColor,
             homeFileRef,
-            DUMMY_HOME,
           )}
           <div className="field">
             <label htmlFor="homeName">Nama tim</label>
@@ -299,9 +277,7 @@ export function SetupPage() {
             'away',
             awayLogo,
             awayName,
-            awayColor,
             awayFileRef,
-            DUMMY_AWAY,
           )}
           <div className="field">
             <label htmlFor="awayName">Nama tim</label>
