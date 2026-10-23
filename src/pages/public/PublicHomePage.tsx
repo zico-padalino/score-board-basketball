@@ -23,6 +23,9 @@ export function PublicHomePage() {
           <h2>Turnamen</h2>
           <p>Jadwal pertandingan, skor live, klasemen, dan hasil.</p>
         </div>
+        <Link className="btn btn-primary" to="/boxscore">
+          Lihat Box Score
+        </Link>
       </section>
       {!supabase && <p className="muted">Data turnamen belum tersedia.</p>}
       {error && <p className="logo-error">{error}</p>}

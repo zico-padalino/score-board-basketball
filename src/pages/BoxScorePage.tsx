@@ -1,4 +1,5 @@
 import { BoxScoreTable } from '../components/BoxScoreTable'
+import { Link } from 'react-router-dom'
 import { useGameStore } from '../store/gameStore'
 import { teamScore } from '../utils/stats'
 
@@ -8,6 +9,9 @@ export function BoxScorePage() {
   return (
     <main className="page wide">
       <div className="btn-row no-print" style={{ marginBottom: '1rem' }}>
+        <Link className="btn btn-ghost" to="/boxscore">
+          Box Score turnamen
+        </Link>
         <button
           className="btn btn-navy"
           type="button"

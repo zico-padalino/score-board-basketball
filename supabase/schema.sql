@@ -91,7 +91,9 @@ create table if not exists public.admins (
 alter table public.admins enable row level security;
 
 -- Ganti / tambah email admin di sini (akun dibuat di Authentication → Users)
-insert into public.admins (email) values ('zico.padalino@untirta.ac.id')
+insert into public.admins (email) values
+  ('zico.padalino@untirta.ac.id'),
+  ('reign@aseba.com')
 on conflict (email) do nothing;
 
 create or replace function public.is_admin()

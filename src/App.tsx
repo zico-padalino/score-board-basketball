@@ -7,6 +7,7 @@ import { BoxScorePage } from './pages/BoxScorePage'
 import { DisplayPage } from './pages/DisplayPage'
 import { LoginPage } from './pages/LoginPage'
 import { OperatorPage } from './pages/OperatorPage'
+import { PublicBoxScorePage } from './pages/public/PublicBoxScorePage'
 import { PublicHomePage } from './pages/public/PublicHomePage'
 import { PublicTournamentPage } from './pages/public/PublicTournamentPage'
 import { ScoresheetPage } from './pages/ScoresheetPage'
@@ -26,6 +27,7 @@ export default function App() {
       <Routes>
         <Route element={<PublicLayout />}>
           <Route index element={<PublicHomePage />} />
+          <Route path="boxscore" element={<PublicBoxScorePage />} />
           <Route path="t/:id" element={<PublicTournamentPage />} />
         </Route>
         <Route path="login" element={<LoginPage />} />

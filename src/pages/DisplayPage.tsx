@@ -12,10 +12,53 @@ import {
   periodsOf,
   regularPeriods,
 } from '../utils/format'
-import { periodScore, teamFoulsInPeriod, teamScore } from '../utils/stats'
+import { periodScore, teamScore } from '../utils/stats'
 import { unlockAudio } from '../utils/buzzer'
 import { useBranding } from '../lib/branding'
 
+function DisplayClock() {
+  const clockMs = useGameStore((s) => s.clockMs)
+  const shotClockMs = useGameStore((s) => s.shotClockMs)
+  const clockRunning = useGameStore((s) => s.clockRunning)
+  const shotClockEnabled = useGameStore((s) => s.config.shotClockEnabled)
+  const shotClockLimit = useGameStore((s) => s.config.shotClockMs)
+  const shotLow = shotClockMs <= 5000
+  const shotPct = Math.min(100, (shotClockMs / shotClockLimit) * 100)
+
+  return (
+    <>
+      <div
+        className={[
+          'mid-clock',
+          clockMs <= 10000 ? 'low' : '',
+          clockRunning ? 'running' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+      >
+        {formatClock(clockMs)}
+      </div>
+
+      {shotClockEnabled !== false && (
+        <div className={`shot-module ${shotLow ? 'low' : ''}`}>
+          <div
+            className="shot-ring"
+            style={{
+              background: `conic-gradient(${
+                shotLow ? '#ff5a5a' : '#f26b12'
+              } ${shotPct}%, rgba(255,255,255,0.08) 0)`,
+            }}
+          >
+            <div className="shot-core">
+              <small>SHOT</small>
+              <strong>{formatShotClock(shotClockMs)}</strong>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
 
 export function DisplayPage() {
   const brand = useBranding()
@@ -23,21 +66,18 @@ export function DisplayPage() {
   const away = useGameStore((s) => s.away)
   const scoreEvents = useGameStore((s) => s.scoreEvents)
   const period = useGameStore((s) => s.period)
-  const clockMs = useGameStore((s) => s.clockMs)
-  const shotClockMs = useGameStore((s) => s.shotClockMs)
   const possession = useGameStore((s) => s.possession)
   const status = useGameStore((s) => s.status)
   const clockRunning = useGameStore((s) => s.clockRunning)
   const config = useGameStore((s) => s.config)
   const periods = periodsOf(config)
   const PERIODS = regularPeriods(periods)
-  const state = useGameStore()
   const soundOn = useCountdownSoundEnabled()
 
   const homeScore = teamScore(scoreEvents, 'home')
   const awayScore = teamScore(scoreEvents, 'away')
-  const homeFouls = teamFoulsInPeriod(state, 'home', period)
-  const awayFouls = teamFoulsInPeriod(state, 'away', period)
+  const homeFouls = useGameStore((s) => s.home.periodFouls[s.period] ?? 0)
+  const awayFouls = useGameStore((s) => s.away.periodFouls[s.period] ?? 0)
 
   const [pulse, setPulse] = useState<TeamId | null>(null)
   const [showControls, setShowControls] = useState(true)
@@ -102,10 +142,6 @@ export function DisplayPage() {
   const lastPlayer = lastScore
     ? lastTeam?.players.find((p) => p.id === lastScore.playerId)
     : null
-
-  const shotLow = shotClockMs <= 5000
-  const clockLow = clockMs <= 10000
-  const shotPct = Math.min(100, (shotClockMs / config.shotClockMs) * 100)
 
   const otHome = scoreEvents
     .filter((e) => e.teamId === 'home' && e.period > periods)
@@ -226,35 +262,7 @@ export function DisplayPage() {
 
         <section className="display-mid">
           <div className="mid-period">{periodLabel(period, periods)}</div>
-          <div
-            className={[
-              'mid-clock',
-              clockLow ? 'low' : '',
-              clockRunning ? 'running' : '',
-            ]
-              .filter(Boolean)
-              .join(' ')}
-          >
-            {formatClock(clockMs)}
-          </div>
-
-          {config.shotClockEnabled !== false && (
-            <div className={`shot-module ${shotLow ? 'low' : ''}`}>
-              <div
-                className="shot-ring"
-                style={{
-                  background: `conic-gradient(${
-                    shotLow ? '#ff5a5a' : '#f26b12'
-                  } ${shotPct}%, rgba(255,255,255,0.08) 0)`,
-                }}
-              >
-                <div className="shot-core">
-                  <small>SHOT</small>
-                  <strong>{formatShotClock(shotClockMs)}</strong>
-                </div>
-              </div>
-            </div>
-          )}
+          <DisplayClock />
 
           <table className="period-board">
             <thead>

@@ -177,18 +177,16 @@ export function useScoreboardSync(mode: 'broadcast' | 'receive') {
 
   useEffect(() => {
     if (mode !== 'receive' || !clockRunning) return
-    let frame = 0
     let last: number | null = null
-    const loop = (now: number) => {
+    const timer = window.setInterval(() => {
+      const now = performance.now()
       if (last !== null) {
         const delta = now - last
         if (delta > 0 && delta < 250) useGameStore.getState().tick(delta)
       }
       last = now
-      frame = requestAnimationFrame(loop)
-    }
-    frame = requestAnimationFrame(loop)
-    return () => cancelAnimationFrame(frame)
+    }, 100)
+    return () => window.clearInterval(timer)
   }, [mode, clockRunning])
 }
 

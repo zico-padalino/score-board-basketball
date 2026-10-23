@@ -1,4 +1,4 @@
-import { Link, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useBranding } from '../lib/branding'
 
 export function PublicLayout() {
@@ -13,9 +13,12 @@ export function PublicLayout() {
             <span>Basketball Community</span>
           </div>
         </Link>
-        <Link to="/login" className="btn btn-sm btn-ghost no-print">
-          Admin
-        </Link>
+        <nav className="nav-links" aria-label="Menu publik">
+          <NavLink to="/boxscore">Box Score</NavLink>
+          <Link to="/login" className="btn btn-sm btn-ghost no-print">
+            Admin
+          </Link>
+        </nav>
       </header>
       <div className="app-content">
         <Outlet />
