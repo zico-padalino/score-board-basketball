@@ -4182,6 +4182,42 @@ button {
   border-color: rgba(193, 18, 31, 0.5);
 }
 
+.bk-match-wrap {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.bk-editor {
+  padding: 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.bk-editor summary {
+  cursor: pointer;
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.bk-editor-fields {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.bk-editor-fields label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.bk-editor-fields select {
+  width: 100%;
+}
+
 .bk-when {
   font-size: 0.7rem;
   font-weight: 700;

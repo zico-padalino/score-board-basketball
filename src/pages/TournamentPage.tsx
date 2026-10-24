@@ -6,12 +6,13 @@ import { supabase } from '../lib/supabase'
 import {
   assignSchedule,
   buildKnockoutMatches,
+  matchWinner,
   matchMinutesOf,
   resolveSettings,
   seedsFromGroups,
   standingsByGroup,
 } from '../lib/tournament'
-import { deleteStageMatches, insertMatches } from '../lib/tournamentApi'
+import { deleteStageMatches, insertMatches, updateMatch } from '../lib/tournamentApi'
 import { useGameStore } from '../store/gameStore'
 import type { Match } from '../types/tournament'
 import { FORMAT_LABELS } from '../types/tournament'
@@ -168,6 +169,64 @@ export function TournamentPage() {
     }
   }
 
+  const moveBracketMatch = async (match: Match, target: Match) => {
+    setError(null)
+    try {
+      if (match.id === target.id) return
+      if (
+        !window.confirm(
+          `Pindahkan ${match.round_label} ke slot ${target.round_label} · game ${target.bracket_index + 1}? Data dan skor pertandingan tetap dipertahankan. Posisi laga tujuan akan bertukar.`,
+        )
+      ) {
+        return
+      }
+
+      const position = (item: Match) => ({
+        round: item.round,
+        round_label: item.round_label,
+        bracket_index: item.bracket_index,
+        next_match_id: item.next_match_id,
+        next_slot: item.next_slot,
+      })
+      const matchPosition = position(match)
+      const targetPosition = position(target)
+
+      for (const item of [match, target]) {
+        const winner = item.status === 'finished' ? matchWinner(item) : null
+        if (winner && item.next_match_id && item.next_slot) {
+          const next = matches.find((candidate) => candidate.id === item.next_match_id)
+          if (next?.[`${item.next_slot}_team_id`] === winner) {
+            await updateMatch(next.id, { [`${item.next_slot}_team_id`]: null })
+          }
+        }
+      }
+
+      await updateMatch(match.id, targetPosition)
+      await updateMatch(target.id, matchPosition)
+
+      for (const [item, nextMatchId, nextSlot] of [
+        [match, targetPosition.next_match_id, targetPosition.next_slot],
+        [target, matchPosition.next_match_id, matchPosition.next_slot],
+      ] as const) {
+        const winner = item.status === 'finished' ? matchWinner(item) : null
+        if (winner && nextMatchId && nextSlot) {
+          await updateMatch(nextMatchId, { [`${nextSlot}_team_id`]: winner })
+        }
+      }
+      await reload()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Gagal memindahkan pertandingan')
+    }
+  }
+
+  const updateBracketTeams = async (match: Match, homeId: string, awayId: string) => {
+    if (!homeId || !awayId || homeId === awayId) {
+      throw new Error('Pilih dua tim yang berbeda.')
+    }
+    await updateMatch(match.id, { home_team_id: homeId, away_team_id: awayId })
+    await reload()
+  }
+
   const live = matches.filter((m) => m.status === 'live').length
   const done = matches.filter((m) => m.status === 'finished').length
 
@@ -227,6 +286,9 @@ export function TournamentPage() {
           onCreateBracket={createBracket}
           creatingBracket={creatingBracket}
           format={tournament.format}
+          teams={teams}
+          onMoveMatch={moveBracketMatch}
+          onUpdateTeams={updateBracketTeams}
         />
       )}
       {tab === 'tim' && (

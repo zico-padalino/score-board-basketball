@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { LiveClock } from '../../components/LiveClock'
 import { TeamLogo } from '../../components/TeamLogo'
 import { matchWinner } from '../../lib/tournament'
@@ -11,6 +12,9 @@ export function BracketTab({
   onCreateBracket,
   creatingBracket = false,
   format,
+  teams = [],
+  onMoveMatch,
+  onUpdateTeams,
 }: {
   matches: Match[]
   teamById: Map<string, TournamentTeam>
@@ -18,7 +22,16 @@ export function BracketTab({
   onCreateBracket?: () => void
   creatingBracket?: boolean
   format: TournamentFormat
+  teams?: TournamentTeam[]
+  onMoveMatch?: (match: Match, target: Match) => Promise<void>
+  onUpdateTeams?: (match: Match, homeId: string, awayId: string) => Promise<void>
 }) {
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [homeId, setHomeId] = useState('')
+  const [awayId, setAwayId] = useState('')
+  const [targetId, setTargetId] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
   const knockout = matches.filter((m) => m.stage === 'knockout')
   if (knockout.length === 0) {
     return (
@@ -50,6 +63,9 @@ export function BracketTab({
   }
 
   const rounds = [...new Set(knockout.map((m) => m.round))].sort((a, b) => a - b)
+  const firstRoundMatches = knockout
+    .filter((match) => match.round === rounds[0])
+    .sort((a, b) => a.bracket_index - b.bracket_index)
   const final = knockout.find((m) => m.round === rounds[rounds.length - 1])
   const championId = final?.status === 'finished' ? matchWinner(final) : null
   const champion = championId ? teamById.get(championId) : undefined
@@ -75,6 +91,41 @@ export function BracketTab({
         <b>{m.status === 'scheduled' ? '' : score}</b>
       </div>
     )
+  }
+
+  const startEdit = (match: Match) => {
+    setEditingId(match.id)
+    setHomeId(match.home_team_id ?? '')
+    setAwayId(match.away_team_id ?? '')
+    setEditError(null)
+  }
+
+  const saveTeams = async (match: Match) => {
+    setSaving(true)
+    setEditError(null)
+    try {
+      await onUpdateTeams?.(match, homeId, awayId)
+      setEditingId(null)
+    } catch (e) {
+      setEditError(e instanceof Error ? e.message : 'Gagal menyimpan pasangan tim')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const moveMatch = async (match: Match) => {
+    const target = firstRoundMatches.find((item) => item.id === targetId)
+    if (!target) return
+    setSaving(true)
+    setEditError(null)
+    try {
+      await onMoveMatch?.(match, target)
+      setTargetId('')
+    } catch (e) {
+      setEditError(e instanceof Error ? e.message : 'Gagal memindahkan pertandingan')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -122,28 +173,120 @@ export function BracketTab({
                 {list.map((m) => {
                   const ready = Boolean(m.home_team_id && m.away_team_id)
                   return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      className={`bk-match status-${m.status}`}
-                      disabled={!ready || !onOpen}
-                      onClick={() => onOpen?.(m)}
-                      title={ready && onOpen ? 'Buka di scoreboard' : undefined}
-                    >
-                      <span className="bk-when">
-                        {m.scheduled_at
-                          ? `${formatDay(m.scheduled_at).split(',')[0]} · ${formatTime(m.scheduled_at)}`
-                          : 'Belum dijadwalkan'}
-                        {m.status === 'live' && (
-                          <em>
-                            {' '}
-                            · LIVE <LiveClock match={m} />
-                          </em>
-                        )}
-                      </span>
-                      {slot(m, 'home')}
-                      {slot(m, 'away')}
-                    </button>
+                    <div className="bk-match-wrap" key={m.id}>
+                      <button
+                        type="button"
+                        className={`bk-match status-${m.status}`}
+                        disabled={!ready || !onOpen}
+                        onClick={() => onOpen?.(m)}
+                        title={ready && onOpen ? 'Buka di scoreboard' : undefined}
+                      >
+                        <span className="bk-when">
+                          {m.scheduled_at
+                            ? `${formatDay(m.scheduled_at).split(',')[0]} · ${formatTime(m.scheduled_at)}`
+                            : 'Belum dijadwalkan'}
+                          {m.status === 'live' && (
+                            <em>
+                              {' '}
+                              · LIVE <LiveClock match={m} />
+                            </em>
+                          )}
+                        </span>
+                        {slot(m, 'home')}
+                        {slot(m, 'away')}
+                      </button>
+                      {(onMoveMatch || onUpdateTeams) && (
+                        <details className="bk-editor">
+                          <summary>Atur pertandingan</summary>
+                          {onUpdateTeams && (
+                            <>
+                              {m.status === 'scheduled' ? (
+                                editingId === m.id ? (
+                                  <div className="bk-editor-fields">
+                                    <label>
+                                      Tim 1
+                                      <select value={homeId} onChange={(e) => setHomeId(e.target.value)}>
+                                        <option value="">Pilih tim</option>
+                                        {teams.map((team) => (
+                                          <option key={team.id} value={team.id}>
+                                            {team.name}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </label>
+                                    <label>
+                                      Tim 2
+                                      <select value={awayId} onChange={(e) => setAwayId(e.target.value)}>
+                                        <option value="">Pilih tim</option>
+                                        {teams.map((team) => (
+                                          <option key={team.id} value={team.id}>
+                                            {team.name}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </label>
+                                    <div className="btn-row">
+                                      <button
+                                        className="btn btn-sm btn-primary"
+                                        type="button"
+                                        disabled={saving}
+                                        onClick={() => void saveTeams(m)}
+                                      >
+                                        Simpan pasangan
+                                      </button>
+                                      <button
+                                        className="btn btn-sm btn-ghost"
+                                        type="button"
+                                        disabled={saving}
+                                        onClick={() => setEditingId(null)}
+                                      >
+                                        Batal
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <button
+                                    className="btn btn-sm btn-ghost"
+                                    type="button"
+                                    onClick={() => startEdit(m)}
+                                  >
+                                    Atur siapa melawan siapa
+                                  </button>
+                                )
+                              ) : (
+                                <p className="muted">Pasangan laga yang sudah dimulai tidak dapat diubah.</p>
+                              )}
+                            </>
+                          )}
+                          {onMoveMatch && (
+                            <div className="bk-editor-fields">
+                              <label>
+                                Pindahkan ke game babak pertama
+                                <select value={targetId} onChange={(e) => setTargetId(e.target.value)}>
+                                  <option value="">Pilih slot game</option>
+                                  {firstRoundMatches
+                                    .filter((target) => target.id !== m.id)
+                                    .map((target) => (
+                                      <option key={target.id} value={target.id}>
+                                        Game {target.bracket_index + 1}
+                                      </option>
+                                    ))}
+                                </select>
+                              </label>
+                              <button
+                                className="btn btn-sm btn-navy"
+                                type="button"
+                                disabled={saving || !targetId}
+                                onClick={() => void moveMatch(m)}
+                              >
+                                Pindahkan laga ke slot ini
+                              </button>
+                            </div>
+                          )}
+                          {editingId === m.id && editError && <p className="logo-error">{editError}</p>}
+                        </details>
+                      )}
+                    </div>
                   )
                 })}
               </div>
