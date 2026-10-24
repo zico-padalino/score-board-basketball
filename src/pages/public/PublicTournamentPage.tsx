@@ -161,7 +161,9 @@ export function PublicTournamentPage() {
       {tab === 'klasemen' && <StandingsTab tournament={tournament} teams={teams} matches={matches} />}
       {tab === 'hasil' && <ResultsTab matches={matches} teamById={teamById} />}
       {tab === 'boxscore' && <BoxScoreTab matches={matches} teamById={teamById} />}
-      {tab === 'bagan' && <BracketTab matches={matches} teamById={teamById} />}
+      {tab === 'bagan' && (
+        <BracketTab matches={matches} teamById={teamById} format={tournament.format} />
+      )}
       {tab === 'tim' && <RostersTab teams={teams} />}
     </main>
   )

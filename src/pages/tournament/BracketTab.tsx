@@ -1,23 +1,50 @@
 import { LiveClock } from '../../components/LiveClock'
 import { TeamLogo } from '../../components/TeamLogo'
 import { matchWinner } from '../../lib/tournament'
-import type { Match, TournamentTeam } from '../../types/tournament'
+import type { Match, TournamentFormat, TournamentTeam } from '../../types/tournament'
 import { formatDay, formatTime } from '../../utils/datetime'
 
 export function BracketTab({
   matches,
   teamById,
   onOpen,
+  onCreateBracket,
+  creatingBracket = false,
+  format,
 }: {
   matches: Match[]
   teamById: Map<string, TournamentTeam>
   onOpen?: (match: Match) => void
+  onCreateBracket?: () => void
+  creatingBracket?: boolean
+  format: TournamentFormat
 }) {
   const knockout = matches.filter((m) => m.stage === 'knockout')
   if (knockout.length === 0) {
     return (
       <section className="panel">
-        <p className="muted">Bagan gugur belum dibuat. Buat lewat tab Jadwal.</p>
+        <h3>Bagan gugur belum dibuat</h3>
+        <p className="muted">
+          {onCreateBracket
+            ? format === 'group_knockout'
+              ? 'Buat babak gugur dari hasil klasemen grup. Babak 8 besar, semifinal, dan final akan disiapkan otomatis sesuai jumlah tim yang lolos.'
+              : 'Buat babak gugur untuk seluruh tim. Babak lanjutan akan disiapkan otomatis.'
+            : 'Bagan gugur belum tersedia.'}
+        </p>
+        {onCreateBracket && (
+          <button
+            className="btn btn-navy"
+            type="button"
+            disabled={creatingBracket}
+            onClick={onCreateBracket}
+          >
+            {creatingBracket
+              ? 'Membuat bagan…'
+              : format === 'group_knockout'
+                ? 'Buat babak gugur dari klasemen'
+                : 'Buat bagan gugur'}
+          </button>
+        )}
       </section>
     )
   }

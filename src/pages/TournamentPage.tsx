@@ -3,6 +3,15 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useTournamentData } from '../hooks/useTournamentData'
 import { hasUnfinishedOtherGame, openMatchInScoreboard } from '../lib/matchLauncher'
 import { supabase } from '../lib/supabase'
+import {
+  assignSchedule,
+  buildKnockoutMatches,
+  matchMinutesOf,
+  resolveSettings,
+  seedsFromGroups,
+  standingsByGroup,
+} from '../lib/tournament'
+import { insertMatches } from '../lib/tournamentApi'
 import { useGameStore } from '../store/gameStore'
 import type { Match } from '../types/tournament'
 import { FORMAT_LABELS } from '../types/tournament'
@@ -19,6 +28,7 @@ export function TournamentPage() {
   const [params, setParams] = useSearchParams()
   const { tournament, teams, matches, teamById, error, setError, reload } = useTournamentData(id)
   const [opening, setOpening] = useState<string | null>(null)
+  const [creatingBracket, setCreatingBracket] = useState(false)
 
   if (!supabase) {
     return (
@@ -82,6 +92,73 @@ export function TournamentPage() {
     }
   }
 
+  const createBracket = async () => {
+    setError(null)
+    setCreatingBracket(true)
+    try {
+      if (matches.some((match) => match.stage === 'knockout')) {
+        throw new Error('Bagan gugur sudah dibuat.')
+      }
+
+      let seeds: string[]
+      if (tournament.format === 'group_knockout') {
+        const groupMatches = matches.filter((match) => match.stage === 'group')
+        if (groupMatches.length === 0) throw new Error('Buat jadwal grup terlebih dahulu.')
+        const pending = groupMatches.filter((match) => match.status !== 'finished').length
+        if (
+          pending > 0 &&
+          !window.confirm(
+            `${pending} laga grup belum selesai. Tetap buat babak gugur dari klasemen sekarang?`,
+          )
+        ) {
+          return
+        }
+        const settings = resolveSettings(tournament.settings)
+        seeds = seedsFromGroups(
+          standingsByGroup(teams, groupMatches),
+          settings.advancePerGroup,
+        )
+      } else {
+        seeds = teams.map((team) => team.id)
+      }
+
+      if (seeds.length < 2) throw new Error('Minimal 2 tim untuk babak gugur.')
+
+      const settings = resolveSettings(tournament.settings)
+      const matchMinutes = matchMinutesOf(settings)
+      const breakMinutes = settings.breakMinutes ?? 15
+      const lastScheduled = matches
+        .map((match) => match.scheduled_at)
+        .filter((scheduledAt): scheduledAt is string => Boolean(scheduledAt))
+        .map((scheduledAt) => new Date(scheduledAt))
+        .filter((date) => !Number.isNaN(date.getTime()))
+        .sort((a, b) => b.getTime() - a.getTime())[0]
+      const nextSlot = lastScheduled
+        ? new Date(lastScheduled.getTime() + (matchMinutes + breakMinutes) * 60_000)
+        : null
+      const now = new Date()
+      const start = nextSlot && nextSlot > now ? nextSlot : new Date(now)
+      if (!nextSlot || nextSlot <= now) {
+        start.setDate(start.getDate() + 1)
+        start.setHours(9, 0, 0, 0)
+      }
+      const venue = [...matches].reverse().find((match) => match.venue)?.venue ?? ''
+      const drafts = assignSchedule(buildKnockoutMatches(tournament.id, seeds), {
+        start: start.toISOString(),
+        matchMinutes,
+        breakMinutes,
+        perDay: 0,
+        venue,
+      })
+      await insertMatches(drafts)
+      reload()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Gagal membuat bagan gugur')
+    } finally {
+      setCreatingBracket(false)
+    }
+  }
+
   const live = matches.filter((m) => m.status === 'live').length
   const done = matches.filter((m) => m.status === 'finished').length
 
@@ -133,7 +210,16 @@ export function TournamentPage() {
         />
       )}
       {tab === 'klasemen' && <StandingsTab tournament={tournament} teams={teams} matches={matches} />}
-      {tab === 'bagan' && <BracketTab matches={matches} teamById={teamById} onOpen={onOpen} />}
+      {tab === 'bagan' && (
+        <BracketTab
+          matches={matches}
+          teamById={teamById}
+          onOpen={onOpen}
+          onCreateBracket={createBracket}
+          creatingBracket={creatingBracket}
+          format={tournament.format}
+        />
+      )}
       {tab === 'tim' && (
         <TeamsTab tournament={tournament} teams={teams} matches={matches} reload={reload} />
       )}
