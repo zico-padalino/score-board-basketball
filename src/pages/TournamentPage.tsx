@@ -11,7 +11,7 @@ import {
   seedsFromGroups,
   standingsByGroup,
 } from '../lib/tournament'
-import { insertMatches } from '../lib/tournamentApi'
+import { deleteStageMatches, insertMatches } from '../lib/tournamentApi'
 import { useGameStore } from '../store/gameStore'
 import type { Match } from '../types/tournament'
 import { FORMAT_LABELS } from '../types/tournament'
@@ -96,8 +96,14 @@ export function TournamentPage() {
     setError(null)
     setCreatingBracket(true)
     try {
-      if (matches.some((match) => match.stage === 'knockout')) {
-        throw new Error('Bagan gugur sudah dibuat.')
+      const knockoutMatches = matches.filter((match) => match.stage === 'knockout')
+      if (
+        knockoutMatches.length > 0 &&
+        !window.confirm(
+          `Generate ulang bagan akan menghapus ${knockoutMatches.length} pertandingan gugur yang ada, termasuk skor dan pertandingan yang sedang berlangsung. Lanjutkan?`,
+        )
+      ) {
+        return
       }
 
       let seeds: string[]
@@ -150,6 +156,9 @@ export function TournamentPage() {
         perDay: 0,
         venue,
       })
+      if (knockoutMatches.length > 0) {
+        await deleteStageMatches(tournament.id, 'knockout')
+      }
       await insertMatches(drafts)
       reload()
     } catch (e) {

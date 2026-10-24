@@ -89,6 +89,27 @@ export function BracketTab({
           <strong>{champion.name}</strong>
         </section>
       )}
+      {onCreateBracket && (
+        <section className="panel">
+          <div className="panel-head">
+            <div>
+              <h3>Generate ulang bagan</h3>
+              <p className="muted">
+                Pertandingan gugur yang ada, termasuk skor dan laga yang sedang berlangsung, akan
+                diganti.
+              </p>
+            </div>
+            <button
+              className="btn btn-navy"
+              type="button"
+              disabled={creatingBracket}
+              onClick={onCreateBracket}
+            >
+              {creatingBracket ? 'Membuat bagan…' : 'Generate ulang bagan'}
+            </button>
+          </div>
+        </section>
+      )}
       <div className="bracket">
         {rounds.map((round) => {
           const list = knockout
